@@ -3,3 +3,5 @@
 -- main.lua
 --
 -----------------------------------------------------------------------------------------
+local app_io = require( "app_io" )
+local app_event = require( "app_event" )

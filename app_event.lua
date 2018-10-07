@@ -1,3 +1,5 @@
+local M = {}
+
 local app_io = require( "app_io" )
 
 local function onSystemEvent( event )
@@ -7,3 +9,5 @@ local function onSystemEvent( event )
 end
 
 Runtime:addEventListener( "system", onSystemEvent )
+
+return M
