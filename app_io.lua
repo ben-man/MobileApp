@@ -12,8 +12,19 @@ local resourcePath = system.pathForFile( nil, resourceDir )
 
 local db = sqlite3.open( dbPath )
 
-function M.openDatabase()
+local function loadTable( filename )
 
+    local path = system.pathForFile( filename, resourceDir )
+    local file = io.open( path, "r" )
+
+    if not file then
+        return nil
+    else
+        local contents = file:read( "*a" )
+        local t = json.decode( contents )
+        io.close( file )
+        return t
+    end
 end
 
 local function closeDatabase()
@@ -24,41 +35,36 @@ end
 
 M.closeDatabase = closeDatabase
 
+local dstImagesPath = docsPath .. "/images"
+local srcImagesPath = resourcePath .. "/images"
+
 --initImages() is called only if the pictures table is empty
 local function initImages()
 
-  local dstImagesPath
-  if not ( lfs.chdir( docsPath ) ) then
-    return nil
-  else
-    dstImagesPath = lfs.currentdir() .. "/images"
-    if not ( lfs.chdir( dstImagesPath ) ) then
-      --docsPath/images doesn't exist. Create it.
-      if not ( lfs.mkdir( "images" ) ) then
-        --Couldn't create docsPath/images.
-        return nil
-      end
+  if not ( lfs.chdir( dstImagesPath ) ) then
+    --docsPath/images doesn't exist. Create it.
+    if not ( lfs.chdir( docsPath ) ) then
+      return nil
+    end
+
+    if not ( lfs.mkdir( "images" ) ) then
+      --Couldn't create docsPath/images.
+      return nil
     end
   end
 
-  local srcImagesPath
-  if not ( lfs.chdir( resourcePath ) ) then
-    --There should be an images directory in the ResourceDirectory
+  local imageList = io.open( resourcePath .. "/images.txt", "r" )
+  if not ( imageList ) then
     return nil
-  else
-    srcImagesPath = lfs.currentdir() .. "/images"
   end
 
-  for filename in lfs.dir( srcImagesPath ) do
-    local srcPath = system.pathForFile( filename, srcImagesPath )
-    local dstPath = system.pathForFile( filename, dstImagesPath )
-
-    local srcFile = io.open( srcPath, "rb" )
+  for filename in imageList:lines() do
+    local srcFile = io.open( srcImagesPath .. "/" .. filename, "rb" )
     if not ( srcFile ) then
       return nil
     end
 
-    local dstFile = io.open( dstPath, "wb" )
+    local dstFile = io.open( dstImagesPath .. "/" .. filename, "wb" )
     if not ( dstFile ) then
       return nil
     end
@@ -76,7 +82,7 @@ local function initImages()
     dstFile:close()
 
     local cmd = [[
-      INSERT INTO pictures(picture_filename) VALUES(']] .. filename .. [[');
+      INSERT INTO pictures(filename) VALUES(']] .. filename .. [[');
     ]]
     local res = db:exec( cmd )
     if not ( res == sqlite3.OK ) then
@@ -84,6 +90,113 @@ local function initImages()
     end
   end
 
+  io.close( imageList )
+
+  return true
+end
+
+function M.getScenarios( difficulty )
+
+  local cmd = [[
+    SELECT id, name, difficulty, text, credit, status FROM scenarios
+  ]]
+--[[
+  if ( difficulty ) then
+    cmd = cmd .. " WHERE difficulty = " .. difficulty
+  end
+
+  cmd = cmd .. " ORDER BY name"
+]]
+  local i = 0
+  local scenarios = {}
+  for row in db:nrows( cmd ) do
+    i = i + 1
+    scenarios[i] = row
+  end
+
+  if ( i > 0 ) then
+    return scenarios
+  else
+    print( "getScenarios: no scenarios found" )
+    return nil
+  end
+end
+
+function M.loadScenario( id )
+
+  local s
+  for row in db:nrows( "SELECT * FROM scenarios WHERE id = " .. id ) do
+    s = row
+  end
+
+  if not ( s ) then
+    print( "loadScenario: no scenario selected")
+    return nil
+  end
+
+  s.cards = json.decode( s.cards )
+  s.pictures = {}
+  local count = #s.cards
+  local slots = {}
+
+  for i = 1, count do
+    slots[i] = i
+  end
+
+  local n = count
+  for i = 1, count do
+    local c = s.cards[i]
+    local r = math.random( n )
+    s.pictures[slots[r]] = {
+      path = system.pathForFile( "images/" .. c.picture , docsDir ),
+      cardIndex = i
+    }
+    table.remove( slots, r )
+    n = n - 1
+  end
+
+  return s
+end
+
+local function saveScenario( s )
+
+  local cmd = [[
+    INSERT INTO scenarios(name, difficulty, text, credit, status, cards) VALUES(
+      ']] .. s.name .. [[',
+      ]] .. s.difficulty .. [[,
+      ']] .. s.text .. [[',
+      ']] .. s.credit .. [[',
+      ]] .. s.status .. [[,
+      ']] .. json.encode( s.cards ) .. [['
+    );
+  ]]
+
+  local res = db:exec( cmd )
+  if not ( res == sqlite3.OK ) then
+    print( "cmd: " .. cmd )
+    print( "Failed to insert scenario (error code: " .. res .. ")")
+    return nil
+  end
+
+  local id = db:last_insert_rowid()
+  s.id = id
+  return id
+end
+
+--initScenarios() is called only if the scenarios table is empty
+local function initScenarios()
+
+  local scenarios = loadTable( "scenarios.json" )
+  if not ( scenarios ) then
+    return nil
+  end
+
+  local count = #scenarios
+  for i = 1, count do
+	   saveScenario( scenarios[i] )
+  end
+
+  return true
 end
 
 function M.initDatabase()
@@ -91,23 +204,17 @@ function M.initDatabase()
   if ( db ) then
     local cmd = [[
       CREATE TABLE IF NOT EXISTS scenarios(
-        scenario_id INTEGER PRIMARY KEY,
-        scenario_name,
-        scenario_difficulty INTEGER NOT NULL,
-        scenario_text,
-        scenario_credit,
-        scenario_status
+        id INTEGER PRIMARY KEY,
+        name,
+        difficulty INTEGER NOT NULL,
+        text,
+        credit,
+        status,
+        cards
       );
       CREATE TABLE IF NOT EXISTS pictures(
-        picture_id INTEGER PRIMARY KEY,
-        picture_filename
-      );
-      CREATE TABLE IF NOT EXISTS cards(
-        scenario_id INTEGER NOT NULL REFERENCES scenarios(scenario_id),
-        card_number INTEGER NOT NULL,
-        picture_id INTEGER NOT NULL REFERENCES pictures(picture_id),
-        card_label,
-        PRIMARY KEY(scenario_id, card_number)
+        id INTEGER PRIMARY KEY,
+        filename
       );
     ]]
     local res = db:exec( cmd )
@@ -120,13 +227,23 @@ function M.initDatabase()
     local col = "count(*)"
     for row in db:nrows( "SELECT " .. col .. " FROM pictures" ) do
       if ( row[col] == 0 ) then
-        res = initImages()
-        if not ( res ) then
+
+        if not ( initImages() ) then
           closeDatabase()
           return nil
         end
       end
     end
+
+    for row in db:nrows( "SELECT " .. col .. " FROM scenarios" ) do
+      if ( row[col] == 0 ) then
+        if not ( initScenarios() ) then
+          closeDatabase()
+          return nil
+        end
+      end
+    end
+
   else
     --could not open database
     return nil

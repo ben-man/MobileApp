@@ -1,0 +1,32 @@
+[
+	{
+		"difficulty":0,
+		"name":"Test Scenario",
+		"status":0,
+		"text":"This is a test scenario:\nCard 1 matches 5,\nCard 2 matches 1,\nCard 3 matches 4,\nCard 4 matches 2,\nCard 5 matches 6,\nCard 6 matches 3",
+		"cards":[
+			{"picture":"5.png","label":"Card 1"},
+			{"picture":"1.png","label":"Card 2"},
+			{"picture":"4.png","label":"Card 3"},
+			{"picture":"2.png","label":"Card 4"},
+			{"picture":"6.png","label":"Card 5"},
+			{"picture":"3.png","label":"Card 6"}
+		],
+		"credit":"Ben"
+	},
+	{
+		"difficulty":0,
+		"name":"Test Scenario 2",
+		"status":0,
+		"text":"This is a test scenario:\nCard 1 matches 2,\nCard 2 matches 3,\nCard 3 matches 4,\nCard 4 matches 5,\nCard 5 matches 6,\nCard 6 matches 1",
+		"cards":[
+			{"picture":"2.png","label":"Card 1"},
+			{"picture":"3.png","label":"Card 2"},
+			{"picture":"4.png","label":"Card 3"},
+			{"picture":"5.png","label":"Card 4"},
+			{"picture":"6.png","label":"Card 5"},
+			{"picture":"1.png","label":"Card 6"}
+		],
+		"credit":"Ben"
+	}
+]
