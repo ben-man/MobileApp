@@ -1,4 +1,4 @@
 #!/bin/bash
 
-cd images
-ls > ../images.txt
+cd resources/img/cards
+ls > ../../../images.txt

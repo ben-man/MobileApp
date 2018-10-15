@@ -3,7 +3,9 @@ local M = {}
 local json = require( "json" )
 local sqlite3 = require( "sqlite3" )
 local lfs = require( "lfs" )
+local MultipartFormData = require("multipartForm")
 
+local settings = {currentScenario = ""}
 local docsDir = system.DocumentsDirectory
 local resourceDir = system.ResourceDirectory
 local dbPath = system.pathForFile( "data.db", docsDir )
@@ -12,9 +14,24 @@ local resourcePath = system.pathForFile( nil, resourceDir )
 
 local db = sqlite3.open( dbPath )
 
-local function loadTable( filename )
+--save table t in json format as path
+local function json_saveTable( t, path )
 
-    local path = system.pathForFile( filename, resourceDir )
+    local file, errorString = io.open( path, "w" )
+
+    if not ( file ) then
+        print( "json_saveTable: File error: " .. errorString )
+        return nil
+    else
+        file:write( json.encode( t ) )
+        io.close( file )
+        return true
+    end
+end
+
+--load table from json format file at path
+local function json_loadTable( path )
+
     local file = io.open( path, "r" )
 
     if not file then
@@ -35,11 +52,11 @@ end
 
 M.closeDatabase = closeDatabase
 
-local dstImagesPath = docsPath .. "/images"
-local srcImagesPath = resourcePath .. "/images"
-
 --initImages() is called only if the pictures table is empty
 local function initImages()
+
+  local dstImagesPath = docsPath .. "/images"
+  local srcImagesPath = resourcePath .. "/images"
 
   if not ( lfs.chdir( dstImagesPath ) ) then
     --docsPath/images doesn't exist. Create it.
@@ -93,6 +110,51 @@ local function initImages()
   io.close( imageList )
 
   return true
+end
+
+function M.init()
+
+  local t = json_loadTable( system.pathForFile( "settings.json", docsDir ) )
+  if ( t ) then
+    settings = t
+  end
+
+  if not ( lfs.chdir( docsPath ) ) then
+    return nil
+  end
+
+  local path = docsPath .. "/resources"
+  if not ( lfs.chdir( path ) ) then
+    --docsPath/resources doesn't exist
+    if not ( lfs.mkdir( "resources" ) ) then
+      print( "Couldn't create 'resources' directory in docsPath" )
+      return nil
+    end
+    if not ( lfs.chdir( path ) ) then
+      return nil
+    end
+  end
+
+  path = path .. "/img"
+  if not ( lfs.chdir( path ) ) then
+    --docsPath/resources/img doesn't exist
+    if not ( lfs.mkdir( "img" ) ) then
+      print( "Couldn't create 'img' directory in docsPath/resources" )
+      return nil
+    end
+    if not ( lfs.chdir( path ) ) then
+      return nil
+    end
+  end
+
+  path = path .. "/cards"
+  if not ( lfs.chdir( path ) ) then
+    --docsPath/resources/img/cards doesn't exist
+    if not ( lfs.mkdir( "cards" ) ) then
+      print( "Couldn't create 'cards' directory in docsPath/resources/img" )
+      return nil
+    end
+  end
 end
 
 function M.getScenarios( difficulty )
@@ -158,6 +220,111 @@ function M.loadScenario( id )
   return s
 end
 
+function M.getContent()
+
+  local i = 0
+  local scenarios = {}
+
+  local pics = {}
+
+  local imageList = io.open( resourcePath .. "/images.txt", "r" )
+  if not ( imageList ) then
+    return nil
+  end
+
+  for filename in imageList:lines() do
+    pics[filename] = true
+  end
+
+  io.close( imageList )
+
+  local function downloadListener( event )
+    if ( event.isError ) then
+        print( "getContent: downloadListener: Network error - download failed: ", event.response )
+    elseif ( event.phase == "ended" ) then
+        print( "Downloaded: " .. event.response.filename )
+    end
+  end
+
+  local function networkListener( event )
+
+    if ( event.isError ) then
+      print( "getContent: networkListener: Network error: ", event.response )
+    else
+
+      if ( event.response == "EOF" ) then
+        --no scenarios left
+        print( "getContent: networkListener: EOF" )
+        json_saveTable( scenarios, system.pathForFile( "scenarios.json", docsDir ) )
+        print( "getContent: done" )
+      elseif ( event.response == "Failure!" ) then
+        --failed to get next scenario
+        print( "getContent: networkListener: Failure!" )
+      else
+        i = i + 1
+        --print ( "RESPONSE[" .. i .. "]: " .. event.response )
+        local s = json.decode( event.response )
+
+        if not ( s ) then
+          print( "getContent: json decode failed" )
+          return
+        end
+
+        if not ( type( s ) == "table" ) then
+          print( "getContent: response decoded to a " .. type( s ) )
+          print( "RESPONSE: " .. event.response )
+          json_saveTable( scenarios, system.pathForFile( "scenarios.json", docsDir ) )
+          print( "getContent: done" )
+          return
+        end
+
+        if ( s.name and type( s.name ) == "string" and s.cards and type( s.cards ) == "table") then
+          scenarios[i] = s
+
+          local count = #s.cards
+          for i = 1, count do
+            local c = s.cards[i]
+            if not ( pics[c.spriteSrc] ) then
+              local img = c.spriteSrc
+              if ( string.find( img, " " ) ) then
+                img = string.gsub( img, " ", "%%20" )
+              end
+              network.download(
+                "http://www.privacygames.com/resources/img/cards/" .. img,
+                "GET",
+                downloadListener,
+                {progress = false},
+                "resources/img/cards/" .. c.spriteSrc,
+                docsDir
+              )
+              pics[c.spriteSrc] = true
+            end
+          end
+
+          local multipart = MultipartFormData.new()
+          multipart:addField( "name", s.name )
+          local params = {}
+          params.body = multipart:getBody()
+          params.headers = multipart:getHeaders()
+
+          timer.performWithDelay( 5000, function()
+            print( "body[" .. i .. "]: " .. params.body )
+            network.request( "http://www.privacygames.com/getnextscenario.php", "POST", networkListener, params )
+            end
+          )
+        end
+      end
+    end
+  end
+
+  local multipart = MultipartFormData.new()
+  local params = {}
+  params.body = multipart:getBody()
+  params.headers = multipart:getHeaders()
+  print( "body: " .. params.body )
+  network.request( "http://www.privacygames.com/getnextscenario.php", "POST", networkListener, params )
+end
+
 local function saveScenario( s )
 
   local cmd = [[
@@ -186,7 +353,7 @@ end
 --initScenarios() is called only if the scenarios table is empty
 local function initScenarios()
 
-  local scenarios = loadTable( "scenarios.json" )
+  local scenarios = json_loadTable( system.pathForFile( "scenarios.json", resourceDir ) )
   if not ( scenarios ) then
     return nil
   end
