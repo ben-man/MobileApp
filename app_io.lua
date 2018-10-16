@@ -3,7 +3,6 @@ local M = {}
 local json = require( "json" )
 local sqlite3 = require( "sqlite3" )
 local lfs = require( "lfs" )
-local MultipartFormData = require("multipartForm")
 
 local settings = {initComplete = false}
 local statusFlags = {
@@ -185,111 +184,6 @@ function M.loadScenario( id )
   end
 
   return s
-end
-
-function M.getContent()
-
-  local i = 0
-  local scenarios = {}
-
-  local pics = {}
-
-  local imageList = io.open( resourcePath .. "/images.txt", "r" )
-  if not ( imageList ) then
-    return nil
-  end
-
-  for filename in imageList:lines() do
-    pics[filename] = true
-  end
-
-  io.close( imageList )
-
-  local function downloadListener( event )
-    if ( event.isError ) then
-        print( "getContent: downloadListener: Network error - download failed: ", event.response )
-    elseif ( event.phase == "ended" ) then
-        print( "Downloaded: " .. event.response.filename )
-    end
-  end
-
-  local function networkListener( event )
-
-    if ( event.isError ) then
-      print( "getContent: networkListener: Network error: ", event.response )
-    else
-
-      if ( event.response == "EOF" ) then
-        --no scenarios left
-        print( "getContent: networkListener: EOF" )
-        json_saveTable( scenarios, system.pathForFile( "scenarios.json", docsDir ) )
-        print( "getContent: done" )
-      elseif ( event.response == "Failure!" ) then
-        --failed to get next scenario
-        print( "getContent: networkListener: Failure!" )
-      else
-        i = i + 1
-        --print ( "RESPONSE[" .. i .. "]: " .. event.response )
-        local s = json.decode( event.response )
-
-        if not ( s ) then
-          print( "getContent: json decode failed" )
-          return
-        end
-
-        if not ( type( s ) == "table" ) then
-          print( "getContent: response decoded to a " .. type( s ) )
-          print( "RESPONSE: " .. event.response )
-          json_saveTable( scenarios, system.pathForFile( "scenarios.json", docsDir ) )
-          print( "getContent: done" )
-          return
-        end
-
-        if ( s.name and type( s.name ) == "string" and s.cards and type( s.cards ) == "table") then
-          scenarios[i] = s
-
-          local count = #s.cards
-          for i = 1, count do
-            local c = s.cards[i]
-            if not ( pics[c.spriteSrc] ) then
-              local img = c.spriteSrc
-              if ( string.find( img, " " ) ) then
-                img = string.gsub( img, " ", "%%20" )
-              end
-              network.download(
-                "http://www.privacygames.com/resources/img/cards/" .. img,
-                "GET",
-                downloadListener,
-                {progress = false},
-                "resources/img/cards/" .. c.spriteSrc,
-                docsDir
-              )
-              pics[c.spriteSrc] = true
-            end
-          end
-
-          local multipart = MultipartFormData.new()
-          multipart:addField( "name", s.name )
-          local params = {}
-          params.body = multipart:getBody()
-          params.headers = multipart:getHeaders()
-
-          timer.performWithDelay( 5000, function()
-            print( "body[" .. i .. "]: " .. params.body )
-            network.request( "http://www.privacygames.com/getnextscenario.php", "POST", networkListener, params )
-            end
-          )
-        end
-      end
-    end
-  end
-
-  local multipart = MultipartFormData.new()
-  local params = {}
-  params.body = multipart:getBody()
-  params.headers = multipart:getHeaders()
-  print( "body: " .. params.body )
-  network.request( "http://www.privacygames.com/getnextscenario.php", "POST", networkListener, params )
 end
 
 local function insertScenario( s, flag )
