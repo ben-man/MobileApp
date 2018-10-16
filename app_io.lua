@@ -15,6 +15,7 @@ local dbPath = system.pathForFile( "data.db", docsDir )
 local docsPath = system.pathForFile( nil, docsDir )
 local resourcePath = system.pathForFile( nil, resourceDir )
 local db
+local currentScenario
 
 local function copyFile( srcPath, dstPath )
     -- io.open opens a file at path; returns nil if no file found
@@ -81,6 +82,15 @@ end
 
 M.saveSettings = saveSettings
 
+local function setField( key, value )
+  settings[key] = value
+  saveSettings()
+end
+
+local function getField( key )
+  return settings[key]
+end
+
 local function initDirectories()
 
   assert( lfs.chdir( docsPath ), "chdir failed" )
@@ -126,7 +136,7 @@ end
 function M.getScenarios( difficulty )
 
   local cmd = [[
-    SELECT id, name, difficulty, description, credits, status FROM scenarios
+    SELECT id, name, difficulty, status FROM scenarios
   ]]
 --[[
   if ( difficulty ) then
@@ -150,9 +160,10 @@ function M.getScenarios( difficulty )
   end
 end
 
-function M.loadScenario( id )
+local function loadScenario( id )
 
   local s
+
   for row in db:nrows( "SELECT * FROM scenarios WHERE id = " .. id ) do
     s = row
   end
@@ -162,7 +173,14 @@ function M.loadScenario( id )
     return nil
   end
 
+  if ( s.descriptionBox ) then
+    s.descriptionBox = json.decode( s.descriptionBox )
+  end
   s.cards = json.decode( s.cards )
+  s.targets = json.decode( s.targets )
+  s.arrows = json.decode( s.arrows )
+
+--[=[
   s.pictures = {}
   local count = #s.cards
   local slots = {}
@@ -182,8 +200,53 @@ function M.loadScenario( id )
     table.remove( slots, r )
     n = n - 1
   end
-
+]=]
+  currentScenario = s
+  setField( "scenarioId", s.id )
   return s
+end
+
+M.loadScenario = loadScenario
+
+local function loadNextScenario()
+
+  if not ( currentScenario ) then
+
+    --Restore the current scenario
+    local id = getField( "scenarioId" )
+
+    if ( id ) then
+      return loadScenario( id )
+    end
+
+    --Otherwise, load the first scenario
+    local cmd = "SELECT id FROM scenarios ORDER BY id"
+
+    for row in db:nrows( cmd ) do
+      --currentScenario = row
+      return loadScenario( row.id )
+    end
+
+    --We shouldn't reach this point
+    error( "No scenario found" )
+  else
+    --load the next scenario
+    local cmd = "SELECT id FROM scenarios WHERE id > " .. currentScenario.id .. " ORDER BY id"
+
+    for row in db:nrows( cmd ) do
+      return loadScenario( row.id )
+    end
+
+    --No scenarios left; you win
+    currentScenario = nil
+    return nil
+  end
+end
+
+M.loadNextScenario = loadNextScenario
+
+function M.getCurrentScenario()
+  return currentScenario
 end
 
 local function insertScenario( s, flag )
@@ -321,6 +384,19 @@ function M.buildDatabase()
   return true
 end
 
+function M.printScenario( s )
+  print( "id: " .. s.id )
+  print( "name: " .. s.name )
+  print( "difficulty: " .. s.difficulty )
+  print( "description: " .. s.description )
+  print( "credits: " .. s.credits )
+  print( "descriptionBox: " .. json.encode( s.descriptionBox ) )
+  print( "cards: " .. json.encode( s.cards ) )
+  print( "targets: " .. json.encode( s.targets ) )
+  print( "arrows: " .. json.encode( s.arrows ) )
+  print( "status: " .. s.status )
+end
+
 --function M.init()
   local t = json_loadTable( system.pathForFile( "settings.json", docsDir ) )
   if ( t and type(t) == "table" ) then
@@ -335,6 +411,7 @@ end
   end
 
   db = assert( sqlite3.open( dbPath ), "Failed to open database..." )
+  loadNextScenario()
 --end
 
 return M

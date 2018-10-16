@@ -14,4 +14,4 @@ if ( #scenarios > 0 ) then
 end
 ]]
 
-app_io.buildDatabase()
+app_io.printScenario( app_io.getCurrentScenario() )
