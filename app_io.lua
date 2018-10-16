@@ -20,10 +20,10 @@ local db
 local function copyFile( srcPath, dstPath )
     -- io.open opens a file at path; returns nil if no file found
     local srcFile, srcError = io.open( srcPath, "rb" )
-    assert( srcFile, "copyFile: " .. srcError )
+    assert( srcFile, srcError )
 
     local dstFile, dstError = io.open( dstPath, "wb" )
-    assert( dstFile, "copyFile: " .. dstError )
+    assert( dstFile, dstError )
 
     local data = assert( srcFile:read( "*a" ), "copyFile: read failed" )
     assert( dstFile:write( data ), "copyFile: write failed" )
@@ -294,22 +294,47 @@ end
 
 local function insertScenario( s, flag )
 
+  if ( s.difficulty <= -6 ) then
+    s.difficulty = 0
+  elseif ( s.difficulty <= -4 ) then
+    s.difficulty = 1
+  elseif ( s.difficulty <= -3 ) then
+    s.difficulty = 2
+  else
+    s.difficulty = 3
+  end
+
+  local function checkString( str )
+    if not ( str ) then
+      return ""
+    end
+
+    if ( string.find( str, "\'" ) ) then
+      return string.gsub( str, "\'", "\'\'" )
+    end
+
+    return str
+  end
+
   local cmd = [[
     INSERT INTO scenarios(name, difficulty, description, credits, descriptionBox, cards, targets, arrows, status) VALUES(
-      ']] .. s.name .. [[',
+      ']] .. checkString( s.name ) .. [[',
       ]] .. s.difficulty .. [[,
-      ']] .. s.description .. [[',
-      ']] .. s.credits .. [[',
-      ']] .. json.encode( s.descriptionBox ) .. [[',
-      ']] .. json.encode( s.cards ) .. [[',
-      ']] .. json.encode( s.targets ) .. [[',
-      ']] .. json.encode( s.arrows ) .. [['
+      ']] .. checkString( s.description ) .. [[',
+      ']] .. checkString( s.credits ) .. [[',
+      ']] .. checkString( json.encode( s.descriptionBox ) ) .. [[',
+      ']] .. checkString( json.encode( s.cards ) ) .. [[',
+      ']] .. checkString( json.encode( s.targets ) ) .. [[',
+      ']] .. checkString( json.encode( s.arrows ) ) .. [[',
       ]] .. flag .. [[
     );
   ]]
 
   local res = db:exec( cmd )
-  assert( res == sqlite3.OK, "insertScenario: bad exec (" .. cmd .. ")" )
+  if not ( res == sqlite3.OK) then
+    print( cmd )
+    error( "exec failed...(" .. res .. ")" )
+  end
 
   return true
 end
@@ -333,7 +358,7 @@ local function initPicturesTable( count )
   local srcImagesPath = resourcePath .. "/resources/img/cards"
 
   local imageList = io.open( resourcePath .. "/images.txt", "r" )
-  assert( imageList, "initImages: could not open images.txt" )
+  assert( imageList, "Could not open images.txt" )
 
   for filename in imageList:lines() do
     local srcPath = srcImagesPath .. "/" .. filename
@@ -357,15 +382,25 @@ end
 
 function M.buildDatabase()
 
-  print("Building database...")
+  if ( settings.initComplete ) then
+    return nil
+  end
 
-  db = assert( sqlite3.open( dbPath ), "buildDatabase: Failed to open database..." )
+  local dbHandle = io.open( dbPath, "r" )
+  if( dbHandle ) then
+    print("Deleting existing database...")
+    io.close( dbHandle )
+    os.remove( dbPath )
+  end
+
+  print("Building database...")
+  db = assert( sqlite3.open( dbPath ), "Failed to open database..." )
 
   local cmd = [[
     CREATE TABLE scenarios(
       id INTEGER PRIMARY KEY,
       name,
-      difficulty INTEGER NOT NULL,
+      difficulty INTEGER,
       description,
       credits,
       descriptionBox,
@@ -381,7 +416,9 @@ function M.buildDatabase()
     );
   ]]
   local res = db:exec( cmd )
-  assert( res == sqlite3.OK, "buildDatabase: exec failed..." )
+  if not ( res == sqlite3.OK ) then
+    error( "buildDatabase: exec failed...(" .. res .. ")" )
+  end
 
   initPicturesTable()
   initScenariosTable()
@@ -390,20 +427,20 @@ function M.buildDatabase()
   return true
 end
 
-function M.init()
+--function M.init()
   local t = json_loadTable( system.pathForFile( "settings.json", docsDir ) )
   if ( t and type(t) == "table" ) then
     settings = t
   end
 
   if not ( settings.initComplete ) then
-    assert( initDirectories(), "app_io: initDirectories failed..." )
+    assert( initDirectories(), "initDirectories failed..." )
     copyFile( system.pathForFile( "data.db", resourceDir ), dbPath )
     settings.initComplete = true
     saveSettings()
   end
 
   db = assert( sqlite3.open( dbPath ), "Failed to open database..." )
-end
+--end
 
 return M
