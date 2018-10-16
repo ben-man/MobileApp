@@ -133,6 +133,11 @@ local function initDirectories()
   return true
 end
 
+function M.getImagePath( imageName )
+  local path = docsPath .. "/resources/img/cards/" .. imageName
+  return path
+end
+
 function M.getScenarios( difficulty )
 
   local cmd = [[
