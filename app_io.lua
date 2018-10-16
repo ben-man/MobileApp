@@ -84,42 +84,42 @@ M.saveSettings = saveSettings
 
 local function initDirectories()
 
-  if not ( lfs.chdir( docsPath ) ) then
-    return nil
-  end
+  assert( lfs.chdir( docsPath ), "chdir failed" )
 
   local path = docsPath .. "/resources"
   if not ( lfs.chdir( path ) ) then
     --docsPath/resources doesn't exist
-    if not ( lfs.mkdir( "resources" ) ) then
-      print( "Couldn't create 'resources' directory in docsPath" )
-      return nil
-    end
-    if not ( lfs.chdir( path ) ) then
-      return nil
-    end
+    assert( lfs.mkdir( "resources" ), "Couldn't create 'resources' directory in docsPath" )
+    assert( lfs.chdir( path ), "chdir failed" )
   end
 
   path = path .. "/img"
   if not ( lfs.chdir( path ) ) then
     --docsPath/resources/img doesn't exist
-    if not ( lfs.mkdir( "img" ) ) then
-      print( "Couldn't create 'img' directory in docsPath/resources" )
-      return nil
-    end
-    if not ( lfs.chdir( path ) ) then
-      return nil
-    end
+    assert( lfs.mkdir( "img" ), "Couldn't create 'img' directory in docsPath/resources" )
+    assert( lfs.chdir( path ), "chdir failed" )
   end
 
   path = path .. "/cards"
   if not ( lfs.chdir( path ) ) then
     --docsPath/resources/img/cards doesn't exist
-    if not ( lfs.mkdir( "cards" ) ) then
-      print( "Couldn't create 'cards' directory in docsPath/resources/img" )
-      return nil
-    end
+    assert( lfs.mkdir( "cards" ), "Couldn't create 'cards' directory in docsPath/resources/img" )
   end
+
+  local dstImagesPath = docsPath .. "/resources/img/cards"
+  local srcImagesPath = resourcePath .. "/resources/img/cards"
+
+  local imageList = io.open( resourcePath .. "/images.txt", "r" )
+  assert( imageList, "Could not open images.txt" )
+
+  for filename in imageList:lines() do
+    local srcPath = srcImagesPath .. "/" .. filename
+    local dstPath = dstImagesPath .. "/" .. filename
+
+    copyFile( srcPath, dstPath )
+  end
+
+  io.close( imageList )
 
   return true
 end
@@ -434,7 +434,7 @@ end
   end
 
   if not ( settings.initComplete ) then
-    assert( initDirectories(), "initDirectories failed..." )
+    initDirectories()
     copyFile( system.pathForFile( "data.db", resourceDir ), dbPath )
     settings.initComplete = true
     saveSettings()
