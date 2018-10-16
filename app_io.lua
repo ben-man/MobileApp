@@ -134,7 +134,7 @@ local function initDirectories()
 end
 
 function M.getImagePath( imageName )
-  local path = docsPath .. "/resources/img/cards/" .. imageName
+  local path = "resources/img/cards/" .. imageName
   return path
 end
 
