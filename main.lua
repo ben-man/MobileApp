@@ -13,5 +13,5 @@ if ( #scenarios > 0 ) then
   local s = app_io.loadScenario( scenarios[1].id )
 end
 ]]
-app_io.init()
-app_io.getContent()
+
+app_io.buildDatabase()

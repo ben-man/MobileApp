@@ -5,14 +5,33 @@ local sqlite3 = require( "sqlite3" )
 local lfs = require( "lfs" )
 local MultipartFormData = require("multipartForm")
 
-local settings = {currentScenario = ""}
+local settings = {initComplete = false}
+local statusFlags = {
+  CORE = 0,
+  USER = 1
+}
 local docsDir = system.DocumentsDirectory
 local resourceDir = system.ResourceDirectory
 local dbPath = system.pathForFile( "data.db", docsDir )
 local docsPath = system.pathForFile( nil, docsDir )
 local resourcePath = system.pathForFile( nil, resourceDir )
+local db
 
-local db = sqlite3.open( dbPath )
+local function copyFile( srcPath, dstPath )
+    -- io.open opens a file at path; returns nil if no file found
+    local srcFile, srcError = io.open( srcPath, "rb" )
+    assert( srcFile, "copyFile: " .. srcError )
+
+    local dstFile, dstError = io.open( dstPath, "wb" )
+    assert( dstFile, "copyFile: " .. dstError )
+
+    local data = assert( srcFile:read( "*a" ), "copyFile: read failed" )
+    assert( dstFile:write( data ), "copyFile: write failed" )
+
+    io.close( srcFile )
+    io.close( dstFile )
+    return true
+end
 
 --save table t in json format as path
 local function json_saveTable( t, path )
@@ -45,6 +64,7 @@ local function json_loadTable( path )
 end
 
 local function closeDatabase()
+  print( "Closing database...")
   if ( db and db:isopen() ) then
     db:close()
   end
@@ -52,72 +72,17 @@ end
 
 M.closeDatabase = closeDatabase
 
---initImages() is called only if the pictures table is empty
-local function initImages()
-
-  local dstImagesPath = docsPath .. "/images"
-  local srcImagesPath = resourcePath .. "/images"
-
-  if not ( lfs.chdir( dstImagesPath ) ) then
-    --docsPath/images doesn't exist. Create it.
-    if not ( lfs.chdir( docsPath ) ) then
-      return nil
-    end
-
-    if not ( lfs.mkdir( "images" ) ) then
-      --Couldn't create docsPath/images.
-      return nil
-    end
-  end
-
-  local imageList = io.open( resourcePath .. "/images.txt", "r" )
-  if not ( imageList ) then
-    return nil
-  end
-
-  for filename in imageList:lines() do
-    local srcFile = io.open( srcImagesPath .. "/" .. filename, "rb" )
-    if not ( srcFile ) then
-      return nil
-    end
-
-    local dstFile = io.open( dstImagesPath .. "/" .. filename, "wb" )
-    if not ( dstFile ) then
-      return nil
-    end
-
-    local data = srcFile:read( "*a" )
-    if not ( data ) then
-      return nil
-    else
-      if not ( dstFile:write( data ) ) then
-        return nil
-      end
-    end
-
-    srcFile:close()
-    dstFile:close()
-
-    local cmd = [[
-      INSERT INTO pictures(filename) VALUES(']] .. filename .. [[');
-    ]]
-    local res = db:exec( cmd )
-    if not ( res == sqlite3.OK ) then
-      return nil
-    end
-  end
-
-  io.close( imageList )
-
-  return true
+function M.getSettings()
+  return settings
 end
 
-function M.init()
+local function saveSettings()
+  json_saveTable( settings, system.pathForFile( "settings.json", docsDir ) )
+end
 
-  local t = json_loadTable( system.pathForFile( "settings.json", docsDir ) )
-  if ( t ) then
-    settings = t
-  end
+M.saveSettings = saveSettings
+
+local function initDirectories()
 
   if not ( lfs.chdir( docsPath ) ) then
     return nil
@@ -155,12 +120,14 @@ function M.init()
       return nil
     end
   end
+
+  return true
 end
 
 function M.getScenarios( difficulty )
 
   local cmd = [[
-    SELECT id, name, difficulty, text, credit, status FROM scenarios
+    SELECT id, name, difficulty, description, credits, status FROM scenarios
   ]]
 --[[
   if ( difficulty ) then
@@ -325,96 +292,118 @@ function M.getContent()
   network.request( "http://www.privacygames.com/getnextscenario.php", "POST", networkListener, params )
 end
 
-local function saveScenario( s )
+local function insertScenario( s, flag )
 
   local cmd = [[
-    INSERT INTO scenarios(name, difficulty, text, credit, status, cards) VALUES(
+    INSERT INTO scenarios(name, difficulty, description, credits, descriptionBox, cards, targets, arrows, status) VALUES(
       ']] .. s.name .. [[',
       ]] .. s.difficulty .. [[,
-      ']] .. s.text .. [[',
-      ']] .. s.credit .. [[',
-      ]] .. s.status .. [[,
-      ']] .. json.encode( s.cards ) .. [['
+      ']] .. s.description .. [[',
+      ']] .. s.credits .. [[',
+      ']] .. json.encode( s.descriptionBox ) .. [[',
+      ']] .. json.encode( s.cards ) .. [[',
+      ']] .. json.encode( s.targets ) .. [[',
+      ']] .. json.encode( s.arrows ) .. [['
+      ]] .. flag .. [[
     );
   ]]
 
   local res = db:exec( cmd )
-  if not ( res == sqlite3.OK ) then
-    print( "cmd: " .. cmd )
-    print( "Failed to insert scenario (error code: " .. res .. ")")
-    return nil
-  end
+  assert( res == sqlite3.OK, "insertScenario: bad exec (" .. cmd .. ")" )
 
-  local id = db:last_insert_rowid()
-  s.id = id
-  return id
+  return true
 end
 
---initScenarios() is called only if the scenarios table is empty
-local function initScenarios()
+local function initScenariosTable()
 
   local scenarios = json_loadTable( system.pathForFile( "scenarios.json", resourceDir ) )
-  if not ( scenarios ) then
-    return nil
-  end
+  assert( scenarios, "initScenariosTable: Could not load scenarios.json" )
 
   local count = #scenarios
   for i = 1, count do
-	   saveScenario( scenarios[i] )
+	   insertScenario( scenarios[i], statusFlags.CORE )
   end
 
   return true
 end
 
-function M.initDatabase()
+local function initPicturesTable( count )
 
-  if ( db ) then
+  local dstImagesPath = docsPath .. "/resources/img/cards"
+  local srcImagesPath = resourcePath .. "/resources/img/cards"
+
+  local imageList = io.open( resourcePath .. "/images.txt", "r" )
+  assert( imageList, "initImages: could not open images.txt" )
+
+  for filename in imageList:lines() do
+    local srcPath = srcImagesPath .. "/" .. filename
+    local dstPath = dstImagesPath .. "/" .. filename
+
+    copyFile( srcPath, dstPath )
+
     local cmd = [[
-      CREATE TABLE IF NOT EXISTS scenarios(
-        id INTEGER PRIMARY KEY,
-        name,
-        difficulty INTEGER NOT NULL,
-        text,
-        credit,
-        status,
-        cards
-      );
-      CREATE TABLE IF NOT EXISTS pictures(
-        id INTEGER PRIMARY KEY,
-        filename
+      INSERT INTO pictures(filename, status) VALUES(
+        ']] .. filename .. [[',
+        ]] .. statusFlags.CORE .. [[
       );
     ]]
     local res = db:exec( cmd )
-    if not ( res == sqlite3.OK ) then
-      --exec failed
-      closeDatabase()
-      return nil
-    end
-
-    local col = "count(*)"
-    for row in db:nrows( "SELECT " .. col .. " FROM pictures" ) do
-      if ( row[col] == 0 ) then
-
-        if not ( initImages() ) then
-          closeDatabase()
-          return nil
-        end
-      end
-    end
-
-    for row in db:nrows( "SELECT " .. col .. " FROM scenarios" ) do
-      if ( row[col] == 0 ) then
-        if not ( initScenarios() ) then
-          closeDatabase()
-          return nil
-        end
-      end
-    end
-
-  else
-    --could not open database
-    return nil
+    assert ( res == sqlite3.OK, "initImages: failed to insert row for" .. filename )
   end
+
+  io.close( imageList )
+  return true
+end
+
+function M.buildDatabase()
+
+  print("Building database...")
+
+  db = assert( sqlite3.open( dbPath ), "buildDatabase: Failed to open database..." )
+
+  local cmd = [[
+    CREATE TABLE scenarios(
+      id INTEGER PRIMARY KEY,
+      name,
+      difficulty INTEGER NOT NULL,
+      description,
+      credits,
+      descriptionBox,
+      cards,
+      targets,
+      arrows,
+      status
+    );
+    CREATE TABLE pictures(
+      id INTEGER PRIMARY KEY,
+      filename,
+      status
+    );
+  ]]
+  local res = db:exec( cmd )
+  assert( res == sqlite3.OK, "buildDatabase: exec failed..." )
+
+  initPicturesTable()
+  initScenariosTable()
+
+  print( "Finished building database...")
+  return true
+end
+
+function M.init()
+  local t = json_loadTable( system.pathForFile( "settings.json", docsDir ) )
+  if ( t and type(t) == "table" ) then
+    settings = t
+  end
+
+  if not ( settings.initComplete ) then
+    assert( initDirectories(), "app_io: initDirectories failed..." )
+    copyFile( system.pathForFile( "data.db", resourceDir ), dbPath )
+    settings.initComplete = true
+    saveSettings()
+  end
+
+  db = assert( sqlite3.open( dbPath ), "Failed to open database..." )
 end
 
 return M
