@@ -5,6 +5,7 @@
 -----------------------------------------------------------------------------------------
 local app_io = require( "app_io" )
 local app_event = require( "app_event" )
+local app_game = require( "app_game" )
 
 --[[
 app_io.initDatabase()
@@ -15,3 +16,4 @@ end
 ]]
 
 app_io.printScenario( app_io.getCurrentScenario() )
+app_game.buildGame()
