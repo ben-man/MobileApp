@@ -1,0 +1,61 @@
+I've updated the master branch. app_io keeps track of the current scenario, so this doesn't need to be done elsewhere. This is the app_io interface:
+
+closeDatabase()
+Closes the database. This is called on the "applicationExit" event and doesn't really neet to be used elsewhere.
+
+saveSettings()
+Saves all the settings to a file (settings.json). It's probably easier to just use setField.
+
+setField( key, value )
+Sets the value of the setting specified by key 'key' to 'value' and saves all the settings.
+
+getField( key )
+Returns the value of the setting specified by key 'key' (nil if it is not set).
+
+getScenarios( difficulty )
+Returns a list of scenarios that have the specified difficulty. Each element has the following fields: id, name. The id can be used to load the scenario. (I'm still working on this one)
+
+loadScenario( id )
+Load the scenario with the matching id. Returns a scenario structure with the following fields:
+	id (number),
+	name (string),
+	difficulty (number),
+	description (string),
+	credits (string),
+	descriptionBox:
+	  	Table with the following fields (not every scenario has descriptionBox field):
+			x (number)
+			y (number)
+			height (number)
+			width (number)
+			type (number)
+	cards:
+		List of cards (The pictures that you drag onto targets). Each card has the following fields (both fields seem to have the same value):
+			name (string)
+			spriteSrc (string)
+	targets:
+		List of targets. Each target has the following fields:
+			x (number)
+			y (number)
+			text (string)
+			matchingCard (string)
+	arrows:
+		List of arrows. Each arrow has the following fields:
+			x (number)
+			y (number)
+			angle (number)
+			scaleX (number)
+			scaleY (number)
+	status (number)
+	
+loadNextScenario()
+Loads the next scenario. This should only be called when the current scenario is complete.
+
+getCurrentScenario()
+Returns the current scenario. The same thing that is returned by loadScenario.
+
+printScenario( s )
+Prints the specified scenario s to the console. This is just for testing.
+
+getImagePath( imageName )
+Returns the path of an image relative to system.DocumentsDirectory for use in Corona functions.

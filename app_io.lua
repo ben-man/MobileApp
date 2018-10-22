@@ -301,6 +301,51 @@ local function insertScenario( s, flag )
   return true
 end
 
+function M.scanScenarios()
+
+  local scenarios = json_loadTable( system.pathForFile( "scenarios.json", resourceDir ) )
+  assert( scenarios, "scanScenarios: Could not load scenarios.json" )
+
+  local xMin = scenarios[1].targets[1].x
+  local yMin = scenarios[1].targets[1].y
+  local xMax = 0
+  local yMax = 0
+
+  local count = #scenarios
+  for scenarioIndex = 1, count do
+     local s = scenarios[scenarioIndex]
+     
+     for targetIndex = 1, #s.targets do
+        local t = s.targets[targetIndex]
+        if ( t.x < xMin ) then
+          xMin = t.x
+        end
+        if ( t.x > xMax ) then
+          xMax = t.x
+        end
+        if ( t.y < yMin ) then
+          yMin = t.y
+        end
+        if ( t.y > yMax ) then
+          yMax = t.y
+        end
+      end
+
+    for cardIndex = 1, #s.cards do
+      local c = s.cards[cardIndex]
+      if ( c.name ~= c.spriteSrc ) then
+        print( "scenario: " .. scenarioIndex .. " card: " .. cardIndex .. " name: " .. c.name .. " spriteSrc: " .. c.spriteSrc)
+      end
+    end
+
+  end
+
+  print( "xMin: " .. xMin )
+  print( "xMax: " .. xMax )
+  print( "yMin: " .. yMin )
+  print( "yMax: " .. yMax )
+end
+
 local function initScenariosTable()
 
   local scenarios = json_loadTable( system.pathForFile( "scenarios.json", resourceDir ) )
