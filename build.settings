@@ -1,0 +1,9 @@
+--this is the settings file in which the app orientation and autorotate behaviour written
+settings =
+{
+	orientation =
+	{
+		default = "landscapeRight",
+		supported = { "landscapeLeft", "landscapeRight"},
+	}
+}
