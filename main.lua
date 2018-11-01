@@ -88,7 +88,7 @@ myDropdown     = dropdown.new{
   y            = menuArea.yMin,
   toggleButton = button,
 
-  width        = 280,
+  width        = 140,
   marginTop    = 12,
   padding      = 10,
   options      = dropdownOptions
