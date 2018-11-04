@@ -27,7 +27,7 @@ local menuArea = app_layout.menuArea
 
 local dropdownOptions = {
   {
-    title     = 'Reset',
+    title     = 'Play',
     action    = function()
 
     end
