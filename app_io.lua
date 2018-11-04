@@ -314,7 +314,7 @@ function M.scanScenarios()
   local count = #scenarios
   for scenarioIndex = 1, count do
      local s = scenarios[scenarioIndex]
-
+     
      for targetIndex = 1, #s.targets do
         local t = s.targets[targetIndex]
         if ( t.x < xMin ) then
@@ -344,10 +344,6 @@ function M.scanScenarios()
   print( "xMax: " .. xMax )
   print( "yMin: " .. yMin )
   print( "yMax: " .. yMax )
-end
-
-local function initUsersTable()
-
 end
 
 local function initScenariosTable()
@@ -425,12 +421,6 @@ function M.buildDatabase()
       filename,
       status
     );
-    CREATE TABLE users(
-      id INTEGER PRIMARY KEY,
-      name,
-      password,
-      status
-    );
   ]]
   local res = db:exec( cmd )
   if not ( res == sqlite3.OK ) then
@@ -439,7 +429,6 @@ function M.buildDatabase()
 
   initPicturesTable()
   initScenariosTable()
-  initUsersTable()
 
   print( "Finished building database...")
   return true
