@@ -2,6 +2,9 @@ local M = {}
 
 local app_io = require( "app_io" )
 local app_object = require( "app_object")
+local app_layout = require( "app_layout" )
+
+
 
 local function makeDeck( cards )
   local deck = CardDeck:new()
@@ -9,6 +12,8 @@ local function makeDeck( cards )
   for i = 1, #cards do
     deck:add( cards[i] )
   end
+
+  deck:scale( PrivacyGame.CARDS_SCALE )
 
   return deck
 end
@@ -29,6 +34,10 @@ local function makeTargetPanel( targets, arrows )
   return panel
 end
 
+local function makeStatusPanel()
+  return StatusPanel:new()
+end
+
 function M.buildGame()
 
   --[[
@@ -42,9 +51,35 @@ function M.buildGame()
 
   local s = assert( app_io.getCurrentScenario(), "Current scenario is nil")
 
+  local targetPanel = makeTargetPanel( s.targets, s.arrows )
   local deck = makeDeck( s.cards )
-  local panel = makeTargetPanel( s.targets, s.arrows )
+  local statusPanel = makeStatusPanel()
+end
 
+function onScrollDeck( deckEvent )
+  local deck = deckEvent.deck
+  local pos = deckEvent.pos
+  local cardArea = app_layout.cardArea
+  local bounds = deck.getCardBounds()
+
+  deck:scroll( pos.yOffset )
+
+  return true
+end
+
+function onStopScroll()
+  return true
+end
+
+function onMoveCard( cardEvent )
+  local c = cardEvent.card
+  local pos = cardEvent.pos
+  c:move( pos.xOffset, pos.yOffset )
+  return true
+end
+
+function onDropCard()
+  return true
 end
 
 return M
