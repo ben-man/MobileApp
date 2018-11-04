@@ -243,7 +243,7 @@ function Card:touch( event , idx)
         if(score <= 0) then
           playSound("sad")
           score = 0
-          txtScore.text = "Score: " .. score
+          txtScore.text = "Points: " .. score
 
           imgLose.isVisible = true
           imgLoseButton.isVisible = true
@@ -256,7 +256,7 @@ function Card:touch( event , idx)
         images[idx].y = foundObj.y
         score = score + scorePointsToAdd
         -- redraw score
-        txtScore.text = "Score: " .. score
+        txtScore.text = "Points: " .. score
         playSound("correct")
 
         if(hasGameEnded())then
@@ -407,8 +407,8 @@ function TargetPanel:new()
   function o:createTextScore(size)
       local x =  rect.width/2
       local y =  targetArea.yMin/2
-      txtScore = display.newText( "Score: " ..  score, x, y, "Consolas", size )
-      txtScore:setFillColor(0.9,1,0.9, 0.9)
+      txtScore = display.newText( "Points: " ..  score, x, y, "Consolas", size )
+      txtScore:setFillColor(1,0.2,0.2, 1)
   end
 
   function o:createImgWin()
