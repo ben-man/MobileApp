@@ -5,7 +5,7 @@
 -----------------------------------------------------------------------------------------
 local app_io = require( "app_io" )
 local app_event = require( "app_event" )
-local app_game = require( "app_game" )
+app_game = require( "app_game" )
 local widget = require('widget')
 local dropdown = require('dropdown')
 local screen = require('screen')
@@ -28,9 +28,8 @@ local menuArea = app_layout.menuArea
 local dropdownOptions = {
   {
     title     = 'Play',
-    action    = function()
+    action    = function() app_game.buildGame() end
 
-    end
   },
   {
     title     = 'Editor',
