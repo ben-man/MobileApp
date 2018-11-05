@@ -3,6 +3,10 @@ local M = {}
 local app_io = require( "app_io" )
 local app_object = require( "app_object")
 
+local function makeDescArea( name, desc )
+  return DescArea:new( name, desc )
+end
+
 local function makeDeck( cards )
   local deck = CardDeck:new()
 
@@ -44,10 +48,11 @@ function M.buildGame()
   local s = assert( app_io.getCurrentScenario(), "Current scenario is nil")
 
   -- the order is importante -> deck above panel
-  
-  cleanObjets()
+
+  cleanObjects()
+  local txt = makeDescArea( s.name, s.description )
   local panel = makeTargetPanel( s.targets, s.arrows )
-  local deck = makeDeck( s.cards )  
+  local deck = makeDeck( s.cards )
 
 end
 

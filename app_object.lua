@@ -45,7 +45,7 @@ function loadSounds()
 end
 
 function playSound(snd)
-  audio.play( sounds[snd],{ loops=0 , channel=audio.findFreeChannel() } )   
+  audio.play( sounds[snd],{ loops=0 , channel=audio.findFreeChannel() } )
 end
 
 function hasGameEnded()
@@ -77,12 +77,12 @@ function TargetBox:new( targetDesc , ID)
   rects[ID] = display.newImageRect( group_a, "resources/img/TargetBox.png", 132, 132 )
   if( rects[ID] ~= nil ) then
     rects[ID].anchorX = 0
-    rects[ID].anchorY = 0  
+    rects[ID].anchorY = 0
     rects[ID].name = targetDesc.matchingCard
     foundedObjets[ID] = false
     --rects[ID].x = targetDesc.x
     --rects[ID].y = targetDesc.y
-    
+
     local textOptions = {
       parent = group_a,
       text = targetDesc.text,
@@ -106,20 +106,20 @@ end
 
 -- [[ colision system ]] --
 -- when player drops image on rect inside main panel
-function TargetBox:onCollision(self, event)   
-     if ( event.phase == "began" ) then        
+function TargetBox:onCollision(self, event)
+     if ( event.phase == "began" ) then
         if(self.name == event.other.name)then
           foundedCard = true
           img = getImgRectByName(self.name)
-          
+
           if(img ~= nil)then
              foundObj.x = self.x
              foundObj.y = self.y
-             foundObj.width = self.width  
-             foundObj.height = self.height         
+             foundObj.width = self.width
+             foundObj.height = self.height
           end
         end
-     elseif ( event.phase == "ended" ) then   
+     elseif ( event.phase == "ended" ) then
           foundedCard = false
      end
 end
@@ -159,7 +159,7 @@ function Arrow:new( arrowDesc, idx )
      rect:rotate( arrowDesc.angle )
   end
   arrows[idx] = rect
-  
+
   end
   --o.displayRef = group
 
@@ -174,11 +174,11 @@ CardsLocation = {}
 function Card:new( imgPath, idx, totalCards, cardName)
   local o = {}
   local cardArea = app_layout.cardArea
-  
+
   local imgBorder = 2
   local ySpace = (display.contentHeight / totalCards) -  imgBorder
   local offset = imgBorder/2
-  
+
 
   --local border = display.newImageRect( group, img.sourceBox, 134, ySpace )
   --border.anchorX = 0
@@ -190,22 +190,22 @@ function Card:new( imgPath, idx, totalCards, cardName)
 
   -- used to replace cards to original locations
   local Coords = {x=0,y=0}
-  Coords.x = cardArea.xMin + (display.contentWidth - cardArea.xMin)/2.5 
+  Coords.x = cardArea.xMin + (display.contentWidth - cardArea.xMin)/2.5
   Coords.y = cardArea.yMin + (offset + (idx-1)*ySpace + (idx-1) * imgBorder)
   CardsLocation[idx] = Coords
   -- used to translate with touch event
-  images[idx].x = cardArea.xMin + (display.contentWidth - cardArea.xMin)/2.5 
+  images[idx].x = cardArea.xMin + (display.contentWidth - cardArea.xMin)/2.5
   images[idx].y = cardArea.yMin + (offset + (idx-1)*ySpace + (idx-1) * imgBorder)
   images[idx]:scale(0.4,1)
   -- add lister touch
   images[idx]:addEventListener("touch",function(e) self:touch(e, idx) end)
-  -- add lister colision  
+  -- add lister colision
   physics.addBody(images[idx],"dynamic",{isSensor=true,radius=25})
   images[idx]:addEventListener("collision",function(e) self:onCollision(e, idx) end)
    --group.x = cardArea.xMin
   --group.y = cardArea.yMin + (offset + idx*ySpace + idx * imgBorder)
   --o.displayRef = group
-  
+
   return o
 end
 
@@ -227,7 +227,7 @@ function Card:touch( event , idx)
         images[idx].y = event.y --- images[idx].height/2
 
          images[idx].x = event.x
-        images[idx].y = event.y 
+        images[idx].y = event.y
 
     elseif ( event.phase == "ended" or event.phase == "cancelled" ) then
       local stage = display.getCurrentStage()
@@ -248,7 +248,7 @@ function Card:touch( event , idx)
           imgLose.isVisible = true
           imgLoseButton.isVisible = true
         end
-        
+
       else
         foundedObjets[idx] = true
         foundedCard = false
@@ -265,7 +265,7 @@ function Card:touch( event , idx)
           imgWinButton.isVisible = true
         end
       end
-      
+
     end
   end
 end
@@ -289,7 +289,7 @@ function CardDeck:new()
 
   function o:add( cardDesc, totalCards, i )
     -- add name match for collision
-    local c = Card:new( app_io.getImagePath( cardDesc.spriteSrc ), i, totalCards, cardDesc.name )    
+    local c = Card:new( app_io.getImagePath( cardDesc.spriteSrc ), i, totalCards, cardDesc.name )
     self.cards[i] = c
     --group:insert( c.displayRef )
     self.numCards = i
@@ -302,10 +302,10 @@ end
 
 TargetPanel = {}
 
-function cleanObjets()
+function cleanObjects()
   for k,v in pairs(rects) do
     print(rects[k].name)
-    if(rects[k] ~= nil) then      
+    if(rects[k] ~= nil) then
       rects[k]:removeEventListener("collision",function(e) self:onCollision(rects[k], e) end)
       rects[k]:removeSelf()
       rects[k] = nil
@@ -313,14 +313,14 @@ function cleanObjets()
   end
 
   for k,v in pairs(textRects) do
-    if(textRects[k] ~= nil) then      
+    if(textRects[k] ~= nil) then
         textRects[k]:removeSelf()
         textRects[k] = nil
       end
   end
 
   for k,v in pairs(images) do
-    if(images[k] ~= nil) then      
+    if(images[k] ~= nil) then
       images[k]:removeEventListener("collision",function(e) self:onCollision(e, k) end)
       images[k]:removeSelf()
       images[k] = nil
@@ -333,18 +333,18 @@ function cleanObjets()
   end
 
   for k,v in pairs(foundedObjets) do
-    if(foundedObjets[k] ~= nil) then  
+    if(foundedObjets[k] ~= nil) then
       foundedObjets[k] = nil
     end
   end
 
   for i=1, group_a.numChildren do
-    group_a:remove(1)
+    group_a:remove(i)
   end
   group_a = display.newGroup()
 
   for i=1, group_b.numChildren do
-    group_b:remove(1)
+    group_b:remove(i)
   end
   group_b = display.newGroup()
 
@@ -379,7 +379,7 @@ function TargetPanel:new()
 
   local rect = display.newRoundedRect(
     group_a,
-    targetArea.xMin, 
+    targetArea.xMin,
     targetArea.yMin,
     targetArea.width - targetArea.offset,
     targetArea.height - targetArea.offset,
@@ -468,14 +468,14 @@ function TargetPanel:new()
   end
 
 
-  
+
 
   function o:fitContentsToPanel()
     self.contents.x = targetArea.xMin + (rect.width/2)
     self.contents.y = targetArea.yMin + (rect.height/2)
     self.contents.anchorChildren = true
     local ratio = math.min(
-      (rect.width*0.9) / self.contents.width, 
+      (rect.width*0.9) / self.contents.width,
       (rect.height*0.9) / self.contents.height
     )
 
@@ -488,7 +488,7 @@ function TargetPanel:new()
 
     imgLose.x = rect.width/2
     imgLose.y = rect.height
-  
+
     local xScale = 0.35
     local yScale = 0.4
     local rectWidth = 0
@@ -500,9 +500,9 @@ function TargetPanel:new()
       rectHeight= rects[1].height  * yScale
     end
     if(arrows[1] ~= nil ) then
-      arrowWidth = arrows[1].width * xScale  
-      arrowHeight = arrows[1].height * yScale 
-    end     
+      arrowWidth = arrows[1].width * xScale
+      arrowHeight = arrows[1].height * yScale
+    end
     local xPadding = 0.05 * rect.width
     local yPadding = 0.15 * rect.height
     local xOffset = xPadding
@@ -520,19 +520,19 @@ function TargetPanel:new()
       textRects[i]:scale(xScale,yScale)
 
       xOffset = xOffset + (rect.width - (#rects/2 * rectWidth) + (math.floor(#arrows/2) * arrowWidth) + 2 * xPadding)/(#rects + 1) + rectWidth
-                
+
       if i <= #arrows and (i % (#rects/2) ~= 0)then
         arrows[i].x = xOffset + targetArea.xMin --+ rects[i].contentWidth/2  -
         arrows[i].y = yOffset + targetArea.yMin + arrowHeight/2
-        arrows[i]:scale(xScale,yScale)              
-        xOffset = xOffset + (rect.width - (#rects/2 * rectWidth) + (math.floor(#arrows/2) * arrowWidth) + 2 * xPadding)/(#rects + 1)      
+        arrows[i]:scale(xScale,yScale)
+        xOffset = xOffset + (rect.width - (#rects/2 * rectWidth) + (math.floor(#arrows/2) * arrowWidth) + 2 * xPadding)/(#rects + 1)
       elseif i <= #arrows and (i % (#rects/2) == 0)then
-        xOffset = xOffset - (rect.width - (#rects/2 * rectWidth) + (math.floor(#arrows/2) * arrowWidth) + 2 * xPadding)/(#rects + 1)   
-                  - arrowWidth/2    
+        xOffset = xOffset - (rect.width - (#rects/2 * rectWidth) + (math.floor(#arrows/2) * arrowWidth) + 2 * xPadding)/(#rects + 1)
+                  - arrowWidth/2
         arrows[i].x = xOffset + targetArea.xMin --+ rects[i].contentWidth/2  -
         arrows[i].y = yOffset + targetArea.yMin + arrowHeight/2 + rectHeight * 1.1
-        arrows[i]:scale(xScale,yScale)              
-        
+        arrows[i]:scale(xScale,yScale)
+
       end
       -- 1/2 of rects
       if(i % (#rects/2) == 0)then
@@ -550,8 +550,53 @@ function TargetPanel:new()
   return o
 end
 
+DescArea = {}
+
+function DescArea:new( name, desc )
+  local o = {}
+  local descArea = app_layout.descArea
+
+  local rect = display.newRect( descArea.xMin, descArea.yMin, descArea.width, descArea.height )
+  rect.anchorX = 0
+  rect.anchorY = 0
+  rect:setFillColor( 0, 0, 1, 0.3 )
+
+  local titleOpts = {
+    --parent = group_a,
+    text = name,
+    font = "skranji-bold.ttf",
+    fontSize = descArea.height*0.2,
+    x = descArea.xMin,
+    y = descArea.yMin,
+    width = descArea.width,
+    height = descArea.height*0.3,
+    align = "left"
+  }
+  local titleTxt = display.newText( titleOpts )
+  titleTxt.anchorX = 0
+  titleTxt.anchorY = 0
+
+  local descOpts = {
+    --parent = group_a,
+    text = desc,
+    font = native.systemFont,
+    fontSize = descArea.height*0.7*0.2,
+    x = descArea.xMin,
+    y = descArea.yMin + titleOpts.height,
+    width = descArea.width,
+    height = descArea.height*0.7,
+    align = "left"
+  }
+  local descTxt = display.newText( descOpts )
+  descTxt.anchorX = 0
+  descTxt.anchorY = 0
+
+  return o
+end
+
 function resetGameEvent(event)
   if(event.phase == "began")then
+    app_io.loadNextScenario()
     app_game.buildGame()
   end
 end
