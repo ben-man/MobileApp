@@ -13,7 +13,7 @@ local docsDir = system.DocumentsDirectory
 local resourceDir = system.ResourceDirectory
 local dbPath = system.pathForFile( "data.db", docsDir )
 local docsPath = system.pathForFile( nil, docsDir )
-local resourcePath = system.pathForFile( nil, resourceDir )
+--local resourcePath = system.pathForFile( nil, resourceDir )
 local db
 local currentScenario
 
@@ -116,13 +116,12 @@ local function initDirectories()
   end
 
   local dstImagesPath = docsPath .. "/resources/img/cards"
-  local srcImagesPath = resourcePath .. "/resources/img/cards"
 
-  local imageList = io.open( resourcePath .. "/images.txt", "r" )
+  local imageList = io.open( system.pathForFile( "images.txt", resourceDir ), "r" )
   assert( imageList, "Could not open images.txt" )
 
   for filename in imageList:lines() do
-    local srcPath = srcImagesPath .. "/" .. filename
+    local srcPath = system.pathForFile( "resources/img/cards/" .. filename, resourceDir )
     local dstPath = dstImagesPath .. "/" .. filename
 
     copyFile( srcPath, dstPath )
@@ -185,27 +184,6 @@ local function loadScenario( id )
   s.targets = json.decode( s.targets )
   s.arrows = json.decode( s.arrows )
 
---[=[
-  s.pictures = {}
-  local count = #s.cards
-  local slots = {}
-
-  for i = 1, count do
-    slots[i] = i
-  end
-
-  local n = count
-  for i = 1, count do
-    local c = s.cards[i]
-    local r = math.random( n )
-    s.pictures[slots[r]] = {
-      path = system.pathForFile( "images/" .. c.picture , docsDir ),
-      cardIndex = i
-    }
-    table.remove( slots, r )
-    n = n - 1
-  end
-]=]
   currentScenario = s
   setField( "scenarioId", s.id )
   return s
@@ -362,13 +340,13 @@ end
 local function initPicturesTable( count )
 
   local dstImagesPath = docsPath .. "/resources/img/cards"
-  local srcImagesPath = resourcePath .. "/resources/img/cards"
+  --local srcImagesPath = resourcePath .. "/resources/img/cards"
 
-  local imageList = io.open( resourcePath .. "/images.txt", "r" )
+  local imageList = io.open( system.pathForFile( "images.txt", resourceDir ), "r" )
   assert( imageList, "Could not open images.txt" )
 
   for filename in imageList:lines() do
-    local srcPath = srcImagesPath .. "/" .. filename
+    local srcPath = system.pathForFile( "resources/img/cards/" .. filename, resourceDir )
     local dstPath = dstImagesPath .. "/" .. filename
 
     copyFile( srcPath, dstPath )

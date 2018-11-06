@@ -3,6 +3,8 @@ local M = {}
 local app_io = require( "app_io" )
 local app_layout = require( "app_layout" )
 local widget = require( "widget" )
+local screen = require( "screen" )
+local dropdown = require( "dropdown" )
 
 -- physics engine
 local physics = require "physics"
@@ -55,6 +57,94 @@ function hasGameEnded()
     end
   end
   return true
+end
+
+
+local menuArea = app_layout.menuArea
+
+local dropdownOptions = {
+  {
+    title     = 'Play',
+    action    = function() app_game.buildGame() end
+
+  },
+  {
+    title     = 'Editor',
+    action    = function()
+
+    end
+  },
+  {
+    title     = 'Help',
+    action    = function()
+      native.showAlert('Help', 'What is it\nThe Privacy Game is a fun way to help you understand and protect your privacy online.\n\nHow does it work?\nOn the screen you will see squares with text representing different things related to your privacy online. The goal is to match the correct images to the different squares. You will begin working with an easy scenario, and the difficulty will increase as you progress through the levels. There is a scoring system, where if you happen to answer incorrectly, points will be deducted from your overall score.\n\nHow does this benefit you?\nBy matching pictures to the different labels, it is reinforcing the different scenarios you may be faced with online. It helps you identify what these potential harms may be, and then how to deal with them in an easy and understandable way. As the difficulty increases, you will learn to deal with more complex scenarios, applicable to real and tangible harms in everyday life. You will learn about the legislation and other legal instruments that are designed to protect you when using the internet.', {'Ok'})
+    end
+  },
+  {
+    title     = 'About',
+    action    = function()
+      native.showAlert('About Us', 'Coming Soon.', {'Ok'})
+    end
+  },
+  {
+    title     = 'Contact Us',
+    action    = function()
+      native.showAlert('Contact Us', 'Email', {'Ok'})
+    end
+  },
+}
+
+
+Menu = {}
+
+function Menu:hide()
+  if( self.ref ) then
+    self.ref.isVisible = false
+  end
+end
+
+function Menu:new()
+  local o = {}
+
+  if( self.ref ) then
+    self.ref.isVisible = true
+    return o
+  end
+
+  local myDropdown
+
+  local button = widget.newButton{
+    width       = 32,
+    height      = 32,
+    defaultFile = 'resources/img/menu_white.png',
+    overFile    = 'resources/img/menu_white.png',
+    onEvent     = function( event )
+      local target = event.target
+      local phase  = event.phase
+      if phase == 'began' then
+        target.alpha = .2
+      else
+        target.alpha = 1
+        if phase ==  'ended' then
+          myDropdown:toggle()
+        end
+      end
+    end
+  }
+  button.anchorY = 0
+  
+  myDropdown     = Dropdown.new{
+    x            = menuArea.xMin + (menuArea.width/2),
+    y            = menuArea.yMin,
+    toggleButton = button,
+  
+    width        = 140,
+    marginTop    = 12,
+    padding      = 10,
+    options      = dropdownOptions
+  }
+
+  self.ref = button
 end
 
 TargetBox = {}
@@ -282,7 +372,6 @@ end
 
 CardDeck = {}
 
-
 function CardDeck:new()
   local o = {cards = {}, numCards = 0}
   local group = display.newGroup()
@@ -361,6 +450,9 @@ function cleanObjects()
     imgLoseButton.isVisible = false
   end
 
+  Menu:hide()
+  DescArea:clear()
+
   score = intialScore
 
 
@@ -406,7 +498,7 @@ function TargetPanel:new()
 
   function o:createTextScore(size)
       local x =  rect.width/2
-      local y =  targetArea.yMin/2
+      local y =  targetArea.yMin
       txtScore = display.newText( "Points: " ..  score, x, y, "Consolas", size )
       txtScore:setFillColor(1,0.2,0.2, 1)
   end
@@ -552,17 +644,30 @@ end
 
 DescArea = {}
 
+function DescArea:clear()
+  if( self.ref ) then
+    self.ref:removeSelf()
+    self.ref = nil
+  end
+end
+
 function DescArea:new( name, desc )
   local o = {}
   local descArea = app_layout.descArea
 
-  local rect = display.newRect( descArea.xMin, descArea.yMin, descArea.width, descArea.height )
+  if ( self.ref ) then
+    self:clear()
+  end
+
+  local group = display.newGroup()
+
+  local rect = display.newRect( group, descArea.xMin, descArea.yMin, descArea.width, descArea.height )
   rect.anchorX = 0
   rect.anchorY = 0
   rect:setFillColor( 0, 0, 1, 0.3 )
 
   local titleOpts = {
-    --parent = group_a,
+    parent = group,
     text = name,
     font = "skranji-bold.ttf",
     fontSize = descArea.height*0.2,
@@ -577,7 +682,7 @@ function DescArea:new( name, desc )
   titleTxt.anchorY = 0
 
   local descOpts = {
-    --parent = group_a,
+    parent = group,
     text = desc,
     font = native.systemFont,
     fontSize = descArea.height*0.7*0.2,
@@ -590,6 +695,8 @@ function DescArea:new( name, desc )
   local descTxt = display.newText( descOpts )
   descTxt.anchorX = 0
   descTxt.anchorY = 0
+
+  self.ref = group
 
   return o
 end

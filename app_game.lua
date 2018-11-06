@@ -43,6 +43,12 @@ local function makeTargetPanel( targets, arrows )
   return panel
 end
 
+local function makeMenu()
+  local menu = Menu:new()
+
+  return menu
+end
+
 function M.buildGame()
 
   local s = assert( app_io.getCurrentScenario(), "Current scenario is nil")
@@ -50,9 +56,11 @@ function M.buildGame()
   -- the order is importante -> deck above panel
 
   cleanObjects()
-  local txt = makeDescArea( s.name, s.description )
-  local panel = makeTargetPanel( s.targets, s.arrows )
-  local deck = makeDeck( s.cards )
+
+  makeDescArea( s.name, s.description )
+  makeTargetPanel( s.targets, s.arrows )
+  makeDeck( s.cards )
+  makeMenu()
 
 end
 
