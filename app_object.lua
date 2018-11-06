@@ -417,12 +417,12 @@ function cleanObjects()
   end
 
   for i=1, group_a.numChildren do
-    group_a:remove(i)
+    group_a:remove(1)
   end
   group_a = display.newGroup()
 
   for i=1, group_b.numChildren do
-    group_b:remove(i)
+    group_b:remove(1)
   end
   group_b = display.newGroup()
 
