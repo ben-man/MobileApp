@@ -60,7 +60,7 @@ function M.buildGame()
   makeDescArea( s.name, s.description )
   makeTargetPanel( s.targets, s.arrows )
   makeDeck( s.cards )
-  makeMenu()
+  --makeMenu()
 
 end
 
