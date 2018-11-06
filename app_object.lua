@@ -25,15 +25,13 @@ local foundObj = {}
 -- if a img were already founded true or false
 local foundedObjets = {}
 -- game score
-local intialScore = 0
-local score = 0 -- initial points
+local intialScore = 100
+local score = 100 -- initial points
 local scorePointsToAdd = 10
 local txtScore
 -- image win
 local imgWin
 local imgWinButton
-local imgLose
-local imgLoseButton
 
 local sounds = {}
 
@@ -42,7 +40,6 @@ local sounds = {}
 function loadSounds()
   sounds["correct"] = audio.loadSound( "resources/sfx/correct.mp3" )
   sounds["incorrect"] = audio.loadSound( "resources/sfx/incorrect.mp3" )
-  sounds["sad"] = audio.loadSound( "resources/sfx/sad.mp3" )
   sounds["cheer"] = audio.loadSound( "resources/sfx/cheer.mp3" )
 end
 
@@ -304,7 +301,7 @@ function Card:touch( event , idx)
   local xScaleFactor = 0.4
   --print("x:"..event.x, "y:"..event.y, self.images[idx].isFocus )
   if ( event.phase == "began" ) then
-    -- we only work if new images
+    -- only work if new images
     if(foundedObjets[idx] == false) then
       local stage = display.getCurrentStage()
       stage:setFocus( images[idx] )
@@ -327,17 +324,9 @@ function Card:touch( event , idx)
         transition.to( images[idx], { x= CardsLocation[idx].x, y=CardsLocation[idx].y, time=450} )
         score = score - scorePointsToAdd
         -- redraw score
-        txtScore.text = "Score: " .. score
+        txtScore.text = "Points: " .. score
       -- onFoundCard
         playSound("incorrect")
-        if(score <= 0) then
-          playSound("sad")
-          score = 0
-          txtScore.text = "Points: " .. score
-
-          imgLose.isVisible = true
-          imgLoseButton.isVisible = true
-        end
 
       else
         foundedObjets[idx] = true
@@ -703,7 +692,6 @@ end
 
 function resetGameEvent(event)
   if(event.phase == "began")then
-    app_io.loadNextScenario()
     app_game.buildGame()
   end
 end

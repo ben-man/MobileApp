@@ -191,6 +191,60 @@ end
 
 M.loadScenario = loadScenario
 
+function M.loadImages()
+
+  local s = {}
+
+  for row in db:nrows( "SELECT * FROM pictures"  ) do
+    --s = row 
+    s[#s+1] =
+    {
+        id = row.id,
+        filename = row.filename
+    }
+  end
+
+  
+  return s
+
+end
+
+
+function M.deleteImage( param )
+
+   print (param)
+   local cmd = "DELETE from pictures WHERE id = " .. param  
+   local res = db:exec( cmd ) 
+
+end
+
+
+function M.loadScenarios()
+
+  local s = {}
+
+  for row in db:nrows( "SELECT * FROM scenarios " ) do
+    s[#s+1] =
+    {
+        id = row.id,
+        difficulty = row.difficulty,
+        name = row.name
+    }
+  end
+ 
+  return s
+
+end
+
+
+function M.deleteScenario ( param )
+
+   print (param)
+   local cmd = "DELETE from scenarios WHERE id = " .. param  
+   local res = db:exec( cmd ) 
+
+end
+
 local function loadNextScenario()
 
   if not ( currentScenario ) then
@@ -439,7 +493,6 @@ end
   end
 
   db = assert( sqlite3.open( dbPath ), "Failed to open database..." )
-  loadNextScenario()
 --end
 
 return M

@@ -3,9 +3,15 @@
 -- main.lua
 --
 -----------------------------------------------------------------------------------------
-local app_io = require( "app_io" )
-local app_event = require( "app_event" )
+ 
+display.setStatusBar( display.HiddenStatusBar )
+ 
+local composer = require "composer"
 
-app_game = require( "app_game" )
+local widget = require "widget"
 
-app_game.buildGame()
+isAdmin = 0
+
+-- load first scene
+composer.gotoScene( "play_screen", "fade", 100 ) 
+
