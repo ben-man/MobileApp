@@ -116,6 +116,7 @@ local function initDirectories()
   end
 
   local dstImagesPath = docsPath .. "/resources/img/cards"
+  local srcImagesPath = resourcePath .. "/resources/img/cards"
 
   local imageList = io.open( system.pathForFile( "images.txt", resourceDir ), "r" )
   assert( imageList, "Could not open images.txt" )
