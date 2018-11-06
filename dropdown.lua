@@ -1,6 +1,6 @@
 local screen = require('screen')
 local widget = require('widget')
-Dropdown = {}
+local Dropdown = {}
 
 
 local function onRowRender( event )

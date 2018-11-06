@@ -3,8 +3,6 @@ local M = {}
 local app_io = require( "app_io" )
 local app_layout = require( "app_layout" )
 local widget = require( "widget" )
-local screen = require( "screen" )
-local dropdown = require( "dropdown" )
 
 -- physics engine
 local physics = require "physics"
@@ -25,15 +23,13 @@ local foundObj = {}
 -- if a img were already founded true or false
 local foundedObjets = {}
 -- game score
-local intialScore = 0
-local score = 0 -- initial points
+local intialScore = 100
+local score = 100 -- initial points
 local scorePointsToAdd = 10
 local txtScore
 -- image win
 local imgWin
 local imgWinButton
-local imgLose
-local imgLoseButton
 
 local sounds = {}
 
@@ -42,12 +38,11 @@ local sounds = {}
 function loadSounds()
   sounds["correct"] = audio.loadSound( "resources/sfx/correct.mp3" )
   sounds["incorrect"] = audio.loadSound( "resources/sfx/incorrect.mp3" )
-  sounds["sad"] = audio.loadSound( "resources/sfx/sad.mp3" )
   sounds["cheer"] = audio.loadSound( "resources/sfx/cheer.mp3" )
 end
 
 function playSound(snd)
-  audio.play( sounds[snd],{ loops=0 , channel=audio.findFreeChannel() } )
+  audio.play( sounds[snd],{ loops=0 , channel=audio.findFreeChannel() } )   
 end
 
 function hasGameEnded()
@@ -57,94 +52,6 @@ function hasGameEnded()
     end
   end
   return true
-end
-
-
-local menuArea = app_layout.menuArea
-
-local dropdownOptions = {
-  {
-    title     = 'Play',
-    action    = function() app_game.buildGame() end
-
-  },
-  {
-    title     = 'Editor',
-    action    = function()
-
-    end
-  },
-  {
-    title     = 'Help',
-    action    = function()
-      native.showAlert('Help', 'What is it\nThe Privacy Game is a fun way to help you understand and protect your privacy online.\n\nHow does it work?\nOn the screen you will see squares with text representing different things related to your privacy online. The goal is to match the correct images to the different squares. You will begin working with an easy scenario, and the difficulty will increase as you progress through the levels. There is a scoring system, where if you happen to answer incorrectly, points will be deducted from your overall score.\n\nHow does this benefit you?\nBy matching pictures to the different labels, it is reinforcing the different scenarios you may be faced with online. It helps you identify what these potential harms may be, and then how to deal with them in an easy and understandable way. As the difficulty increases, you will learn to deal with more complex scenarios, applicable to real and tangible harms in everyday life. You will learn about the legislation and other legal instruments that are designed to protect you when using the internet.', {'Ok'})
-    end
-  },
-  {
-    title     = 'About',
-    action    = function()
-      native.showAlert('About Us', 'Coming Soon.', {'Ok'})
-    end
-  },
-  {
-    title     = 'Contact Us',
-    action    = function()
-      native.showAlert('Contact Us', 'Email', {'Ok'})
-    end
-  },
-}
-
-
-Menu = {}
-
-function Menu:hide()
-  if( self.ref ) then
-    self.ref.isVisible = false
-  end
-end
-
-function Menu:new()
-  local o = {}
-
-  if( self.ref ) then
-    self.ref.isVisible = true
-    return o
-  end
-
-  local myDropdown
-
-  local button = widget.newButton{
-    width       = 32,
-    height      = 32,
-    defaultFile = 'resources/img/menu_white.png',
-    overFile    = 'resources/img/menu_white.png',
-    onEvent     = function( event )
-      local target = event.target
-      local phase  = event.phase
-      if phase == 'began' then
-        target.alpha = .2
-      else
-        target.alpha = 1
-        if phase ==  'ended' then
-          myDropdown:toggle()
-        end
-      end
-    end
-  }
-  button.anchorY = 0
-  
-  myDropdown     = Dropdown.new{
-    x            = menuArea.xMin + (menuArea.width/2),
-    y            = menuArea.yMin,
-    toggleButton = button,
-  
-    width        = 140,
-    marginTop    = 12,
-    padding      = 10,
-    options      = dropdownOptions
-  }
-
-  self.ref = button
 end
 
 TargetBox = {}
@@ -167,12 +74,12 @@ function TargetBox:new( targetDesc , ID)
   rects[ID] = display.newImageRect( group_a, "resources/img/TargetBox.png", 132, 132 )
   if( rects[ID] ~= nil ) then
     rects[ID].anchorX = 0
-    rects[ID].anchorY = 0
+    rects[ID].anchorY = 0  
     rects[ID].name = targetDesc.matchingCard
     foundedObjets[ID] = false
     --rects[ID].x = targetDesc.x
     --rects[ID].y = targetDesc.y
-
+    
     local textOptions = {
       parent = group_a,
       text = targetDesc.text,
@@ -196,20 +103,20 @@ end
 
 -- [[ colision system ]] --
 -- when player drops image on rect inside main panel
-function TargetBox:onCollision(self, event)
-     if ( event.phase == "began" ) then
+function TargetBox:onCollision(self, event)   
+     if ( event.phase == "began" ) then        
         if(self.name == event.other.name)then
           foundedCard = true
           img = getImgRectByName(self.name)
-
+          
           if(img ~= nil)then
              foundObj.x = self.x
              foundObj.y = self.y
-             foundObj.width = self.width
-             foundObj.height = self.height
+             foundObj.width = self.width  
+             foundObj.height = self.height         
           end
         end
-     elseif ( event.phase == "ended" ) then
+     elseif ( event.phase == "ended" ) then   
           foundedCard = false
      end
 end
@@ -249,7 +156,7 @@ function Arrow:new( arrowDesc, idx )
      rect:rotate( arrowDesc.angle )
   end
   arrows[idx] = rect
-
+  
   end
   --o.displayRef = group
 
@@ -264,11 +171,11 @@ CardsLocation = {}
 function Card:new( imgPath, idx, totalCards, cardName)
   local o = {}
   local cardArea = app_layout.cardArea
-
+  
   local imgBorder = 2
   local ySpace = (display.contentHeight / totalCards) -  imgBorder
   local offset = imgBorder/2
-
+  
 
   --local border = display.newImageRect( group, img.sourceBox, 134, ySpace )
   --border.anchorX = 0
@@ -280,22 +187,22 @@ function Card:new( imgPath, idx, totalCards, cardName)
 
   -- used to replace cards to original locations
   local Coords = {x=0,y=0}
-  Coords.x = cardArea.xMin + (display.contentWidth - cardArea.xMin)/2.5
+  Coords.x = cardArea.xMin + (display.contentWidth - cardArea.xMin)/2.5 
   Coords.y = cardArea.yMin + (offset + (idx-1)*ySpace + (idx-1) * imgBorder)
   CardsLocation[idx] = Coords
   -- used to translate with touch event
-  images[idx].x = cardArea.xMin + (display.contentWidth - cardArea.xMin)/2.5
+  images[idx].x = cardArea.xMin + (display.contentWidth - cardArea.xMin)/2.5 
   images[idx].y = cardArea.yMin + (offset + (idx-1)*ySpace + (idx-1) * imgBorder)
   images[idx]:scale(0.4,1)
   -- add lister touch
   images[idx]:addEventListener("touch",function(e) self:touch(e, idx) end)
-  -- add lister colision
+  -- add lister colision  
   physics.addBody(images[idx],"dynamic",{isSensor=true,radius=25})
   images[idx]:addEventListener("collision",function(e) self:onCollision(e, idx) end)
    --group.x = cardArea.xMin
   --group.y = cardArea.yMin + (offset + idx*ySpace + idx * imgBorder)
   --o.displayRef = group
-
+  
   return o
 end
 
@@ -304,7 +211,7 @@ function Card:touch( event , idx)
   local xScaleFactor = 0.4
   --print("x:"..event.x, "y:"..event.y, self.images[idx].isFocus )
   if ( event.phase == "began" ) then
-    -- we only work if new images
+    -- only work if new images
     if(foundedObjets[idx] == false) then
       local stage = display.getCurrentStage()
       stage:setFocus( images[idx] )
@@ -317,7 +224,7 @@ function Card:touch( event , idx)
         images[idx].y = event.y --- images[idx].height/2
 
          images[idx].x = event.x
-        images[idx].y = event.y
+        images[idx].y = event.y 
 
     elseif ( event.phase == "ended" or event.phase == "cancelled" ) then
       local stage = display.getCurrentStage()
@@ -327,18 +234,10 @@ function Card:touch( event , idx)
         transition.to( images[idx], { x= CardsLocation[idx].x, y=CardsLocation[idx].y, time=450} )
         score = score - scorePointsToAdd
         -- redraw score
-        txtScore.text = "Score: " .. score
+        txtScore.text = "Points: " .. score
       -- onFoundCard
         playSound("incorrect")
-        if(score <= 0) then
-          playSound("sad")
-          score = 0
-          txtScore.text = "Points: " .. score
-
-          imgLose.isVisible = true
-          imgLoseButton.isVisible = true
-        end
-
+        
       else
         foundedObjets[idx] = true
         foundedCard = false
@@ -355,7 +254,7 @@ function Card:touch( event , idx)
           imgWinButton.isVisible = true
         end
       end
-
+      
     end
   end
 end
@@ -372,13 +271,14 @@ end
 
 CardDeck = {}
 
+
 function CardDeck:new()
   local o = {cards = {}, numCards = 0}
   local group = display.newGroup()
 
   function o:add( cardDesc, totalCards, i )
     -- add name match for collision
-    local c = Card:new( app_io.getImagePath( cardDesc.spriteSrc ), i, totalCards, cardDesc.name )
+    local c = Card:new( app_io.getImagePath( cardDesc.spriteSrc ), i, totalCards, cardDesc.name )    
     self.cards[i] = c
     --group:insert( c.displayRef )
     self.numCards = i
@@ -391,10 +291,10 @@ end
 
 TargetPanel = {}
 
-function cleanObjects()
+function cleanObjets()
   for k,v in pairs(rects) do
     print(rects[k].name)
-    if(rects[k] ~= nil) then
+    if(rects[k] ~= nil) then      
       rects[k]:removeEventListener("collision",function(e) self:onCollision(rects[k], e) end)
       rects[k]:removeSelf()
       rects[k] = nil
@@ -402,14 +302,14 @@ function cleanObjects()
   end
 
   for k,v in pairs(textRects) do
-    if(textRects[k] ~= nil) then
+    if(textRects[k] ~= nil) then      
         textRects[k]:removeSelf()
         textRects[k] = nil
       end
   end
 
   for k,v in pairs(images) do
-    if(images[k] ~= nil) then
+    if(images[k] ~= nil) then      
       images[k]:removeEventListener("collision",function(e) self:onCollision(e, k) end)
       images[k]:removeSelf()
       images[k] = nil
@@ -422,18 +322,18 @@ function cleanObjects()
   end
 
   for k,v in pairs(foundedObjets) do
-    if(foundedObjets[k] ~= nil) then
+    if(foundedObjets[k] ~= nil) then  
       foundedObjets[k] = nil
     end
   end
 
   for i=1, group_a.numChildren do
-    group_a:remove(i)
+    group_a:remove(1)
   end
   group_a = display.newGroup()
 
   for i=1, group_b.numChildren do
-    group_b:remove(i)
+    group_b:remove(1)
   end
   group_b = display.newGroup()
 
@@ -449,9 +349,6 @@ function cleanObjects()
   if(imgLoseButton)then
     imgLoseButton.isVisible = false
   end
-
-  Menu:hide()
-  DescArea:clear()
 
   score = intialScore
 
@@ -471,7 +368,7 @@ function TargetPanel:new()
 
   local rect = display.newRoundedRect(
     group_a,
-    targetArea.xMin,
+    targetArea.xMin, 
     targetArea.yMin,
     targetArea.width - targetArea.offset,
     targetArea.height - targetArea.offset,
@@ -498,7 +395,7 @@ function TargetPanel:new()
 
   function o:createTextScore(size)
       local x =  rect.width/2
-      local y =  targetArea.yMin
+      local y =  targetArea.yMin/2
       txtScore = display.newText( "Points: " ..  score, x, y, "Consolas", size )
       txtScore:setFillColor(1,0.2,0.2, 1)
   end
@@ -560,14 +457,14 @@ function TargetPanel:new()
   end
 
 
-
+  
 
   function o:fitContentsToPanel()
     self.contents.x = targetArea.xMin + (rect.width/2)
     self.contents.y = targetArea.yMin + (rect.height/2)
     self.contents.anchorChildren = true
     local ratio = math.min(
-      (rect.width*0.9) / self.contents.width,
+      (rect.width*0.9) / self.contents.width, 
       (rect.height*0.9) / self.contents.height
     )
 
@@ -580,7 +477,7 @@ function TargetPanel:new()
 
     imgLose.x = rect.width/2
     imgLose.y = rect.height
-
+  
     local xScale = 0.35
     local yScale = 0.4
     local rectWidth = 0
@@ -592,9 +489,9 @@ function TargetPanel:new()
       rectHeight= rects[1].height  * yScale
     end
     if(arrows[1] ~= nil ) then
-      arrowWidth = arrows[1].width * xScale
-      arrowHeight = arrows[1].height * yScale
-    end
+      arrowWidth = arrows[1].width * xScale  
+      arrowHeight = arrows[1].height * yScale 
+    end     
     local xPadding = 0.05 * rect.width
     local yPadding = 0.15 * rect.height
     local xOffset = xPadding
@@ -612,19 +509,19 @@ function TargetPanel:new()
       textRects[i]:scale(xScale,yScale)
 
       xOffset = xOffset + (rect.width - (#rects/2 * rectWidth) + (math.floor(#arrows/2) * arrowWidth) + 2 * xPadding)/(#rects + 1) + rectWidth
-
+                
       if i <= #arrows and (i % (#rects/2) ~= 0)then
         arrows[i].x = xOffset + targetArea.xMin --+ rects[i].contentWidth/2  -
         arrows[i].y = yOffset + targetArea.yMin + arrowHeight/2
-        arrows[i]:scale(xScale,yScale)
-        xOffset = xOffset + (rect.width - (#rects/2 * rectWidth) + (math.floor(#arrows/2) * arrowWidth) + 2 * xPadding)/(#rects + 1)
+        arrows[i]:scale(xScale,yScale)              
+        xOffset = xOffset + (rect.width - (#rects/2 * rectWidth) + (math.floor(#arrows/2) * arrowWidth) + 2 * xPadding)/(#rects + 1)      
       elseif i <= #arrows and (i % (#rects/2) == 0)then
-        xOffset = xOffset - (rect.width - (#rects/2 * rectWidth) + (math.floor(#arrows/2) * arrowWidth) + 2 * xPadding)/(#rects + 1)
-                  - arrowWidth/2
+        xOffset = xOffset - (rect.width - (#rects/2 * rectWidth) + (math.floor(#arrows/2) * arrowWidth) + 2 * xPadding)/(#rects + 1)   
+                  - arrowWidth/2    
         arrows[i].x = xOffset + targetArea.xMin --+ rects[i].contentWidth/2  -
         arrows[i].y = yOffset + targetArea.yMin + arrowHeight/2 + rectHeight * 1.1
-        arrows[i]:scale(xScale,yScale)
-
+        arrows[i]:scale(xScale,yScale)              
+        
       end
       -- 1/2 of rects
       if(i % (#rects/2) == 0)then
@@ -642,68 +539,8 @@ function TargetPanel:new()
   return o
 end
 
-DescArea = {}
-
-function DescArea:clear()
-  if( self.ref ) then
-    self.ref:removeSelf()
-    self.ref = nil
-  end
-end
-
-function DescArea:new( name, desc )
-  local o = {}
-  local descArea = app_layout.descArea
-
-  if ( self.ref ) then
-    self:clear()
-  end
-
-  local group = display.newGroup()
-
-  local rect = display.newRect( group, descArea.xMin, descArea.yMin, descArea.width, descArea.height )
-  rect.anchorX = 0
-  rect.anchorY = 0
-  rect:setFillColor( 0, 0, 1, 0.3 )
-
-  local titleOpts = {
-    parent = group,
-    text = name,
-    font = "skranji-bold.ttf",
-    fontSize = descArea.height*0.2,
-    x = descArea.xMin,
-    y = descArea.yMin,
-    width = descArea.width,
-    height = descArea.height*0.3,
-    align = "left"
-  }
-  local titleTxt = display.newText( titleOpts )
-  titleTxt.anchorX = 0
-  titleTxt.anchorY = 0
-
-  local descOpts = {
-    parent = group,
-    text = desc,
-    font = native.systemFont,
-    fontSize = descArea.height*0.7*0.2,
-    x = descArea.xMin,
-    y = descArea.yMin + titleOpts.height,
-    width = descArea.width,
-    height = descArea.height*0.7,
-    align = "left"
-  }
-  local descTxt = display.newText( descOpts )
-  descTxt.anchorX = 0
-  descTxt.anchorY = 0
-
-  self.ref = group
-
-  return o
-end
-
 function resetGameEvent(event)
   if(event.phase == "began")then
-    app_io.loadNextScenario()
     app_game.buildGame()
   end
 end

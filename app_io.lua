@@ -13,7 +13,7 @@ local docsDir = system.DocumentsDirectory
 local resourceDir = system.ResourceDirectory
 local dbPath = system.pathForFile( "data.db", docsDir )
 local docsPath = system.pathForFile( nil, docsDir )
---local resourcePath = system.pathForFile( nil, resourceDir )
+local resourcePath = system.pathForFile( nil, resourceDir )
 local db
 local currentScenario
 
@@ -118,11 +118,11 @@ local function initDirectories()
   local dstImagesPath = docsPath .. "/resources/img/cards"
   local srcImagesPath = resourcePath .. "/resources/img/cards"
 
-  local imageList = io.open( system.pathForFile( "images.txt", resourceDir ), "r" )
+  local imageList = io.open( resourcePath .. "/images.txt", "r" )
   assert( imageList, "Could not open images.txt" )
 
   for filename in imageList:lines() do
-    local srcPath = system.pathForFile( "resources/img/cards/" .. filename, resourceDir )
+    local srcPath = srcImagesPath .. "/" .. filename
     local dstPath = dstImagesPath .. "/" .. filename
 
     copyFile( srcPath, dstPath )
@@ -185,12 +185,89 @@ local function loadScenario( id )
   s.targets = json.decode( s.targets )
   s.arrows = json.decode( s.arrows )
 
+--[=[
+  s.pictures = {}
+  local count = #s.cards
+  local slots = {}
+
+  for i = 1, count do
+    slots[i] = i
+  end
+
+  local n = count
+  for i = 1, count do
+    local c = s.cards[i]
+    local r = math.random( n )
+    s.pictures[slots[r]] = {
+      path = system.pathForFile( "images/" .. c.picture , docsDir ),
+      cardIndex = i
+    }
+    table.remove( slots, r )
+    n = n - 1
+  end
+]=]
   currentScenario = s
   setField( "scenarioId", s.id )
   return s
 end
 
 M.loadScenario = loadScenario
+
+ 
+function M.loadImages()
+
+  local s = {}
+
+  for row in db:nrows( "SELECT * FROM pictures"  ) do
+    --s = row 
+    s[#s+1] =
+    {
+        id = row.id,
+        filename = row.filename
+    }
+  end
+
+  
+  return s
+
+end
+
+
+function M.deleteImage( param )
+
+   print (param)
+   local cmd = "DELETE from pictures WHERE id = " .. param  
+   local res = db:exec( cmd ) 
+
+end
+
+
+function M.loadScenarios()
+
+  local s = {}
+
+  for row in db:nrows( "SELECT * FROM scenarios " ) do
+    s[#s+1] =
+    {
+        id = row.id,
+        difficulty = row.difficulty,
+        name = row.name
+    }
+  end
+ 
+  return s
+
+end
+
+
+function M.deleteScenario ( param )
+
+   print (param)
+   local cmd = "DELETE from scenarios WHERE id = " .. param  
+   local res = db:exec( cmd ) 
+
+end
+
 
 local function loadNextScenario()
 
@@ -341,13 +418,13 @@ end
 local function initPicturesTable( count )
 
   local dstImagesPath = docsPath .. "/resources/img/cards"
-  --local srcImagesPath = resourcePath .. "/resources/img/cards"
+  local srcImagesPath = resourcePath .. "/resources/img/cards"
 
-  local imageList = io.open( system.pathForFile( "images.txt", resourceDir ), "r" )
+  local imageList = io.open( resourcePath .. "/images.txt", "r" )
   assert( imageList, "Could not open images.txt" )
 
   for filename in imageList:lines() do
-    local srcPath = system.pathForFile( "resources/img/cards/" .. filename, resourceDir )
+    local srcPath = srcImagesPath .. "/" .. filename
     local dstPath = dstImagesPath .. "/" .. filename
 
     copyFile( srcPath, dstPath )

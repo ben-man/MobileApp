@@ -5,15 +5,7 @@ PrivacyGame = {
   CARD_WIDTH = 128,
   ARROW_HEIGHT = 128,
   ARROW_WIDTH = 128,
-  TEXT_HEIGHT = 128,
-  TEXT_WIDTH = 128,
-  SOURCEBOX_HEIGHT = 134,
-  SOURCEBOX_WIDTH = 134,
-  TARGETBOX_HEIGHT = 132,
-  TARGETBOX_WIDTH = 132,
-  CARDS_OFFSET_Y = 540,
-  CARDS_GAP = 10,
-  CARDS_SCALE = 0.75
+  CARDS_OFFSET_Y = 540
 }
 
 local menuArea = {}
@@ -61,7 +53,7 @@ targetArea.offset = math.min(
     (targetArea.height*0.04)
 )
 targetArea.scaleFactor = math.min(
-    (targetArea.width*0.9) / PrivacyGame.GAME_WIDTH,
+    (targetArea.width*0.9) / PrivacyGame.GAME_WIDTH, 
     (targetArea.height*0.9) / PrivacyGame.CARDS_OFFSET_Y
 )
 
