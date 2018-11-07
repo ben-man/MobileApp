@@ -91,6 +91,22 @@ local function getField( key )
   return settings[key]
 end
 
+--To make Android happy
+local function moveResourceFiles()
+  local manifest = io.open( system.pathForFile( "manifest.txt", resourceDir ), "r" )
+  assert( manifest, "Could not open manifest.txt" )
+
+  for name in manifest:lines() do
+    local filename = l:match("(.+)%..+")
+    local srcPath = system.pathForFile( name, resourceDir )
+    local dstPath = system.pathForFile( filename, docsDir )
+
+    copyFile( srcPath, dstPath )
+  end
+
+  io.close( manifest )
+end
+
 local function initDirectories()
 
   assert( lfs.chdir( docsPath ), "chdir failed" )
@@ -102,33 +118,22 @@ local function initDirectories()
     assert( lfs.chdir( path ), "chdir failed" )
   end
 
-  path = path .. "/img"
-  if not ( lfs.chdir( path ) ) then
+  if not ( lfs.chdir( path .. "/img" ) ) then
     --docsPath/resources/img doesn't exist
     assert( lfs.mkdir( "img" ), "Couldn't create 'img' directory in docsPath/resources" )
-    assert( lfs.chdir( path ), "chdir failed" )
   end
 
-  path = path .. "/cards"
-  if not ( lfs.chdir( path ) ) then
+  if not ( lfs.chdir( path .. "/sfx" ) ) then
+    --docsPath/resources/sfx doesn't exist
+    assert( lfs.mkdir( "sfx" ), "Couldn't create 'sfx' directory in docsPath/resources" )
+  end
+
+  if not ( lfs.chdir( path .. "img/cards" ) ) then
     --docsPath/resources/img/cards doesn't exist
     assert( lfs.mkdir( "cards" ), "Couldn't create 'cards' directory in docsPath/resources/img" )
   end
 
-  local dstImagesPath = docsPath .. "/resources/img/cards"
-  --local srcImagesPath = resourcePath .. "/resources/img/cards"
-
-  local imageList = io.open( system.pathForFile( "images.txt", resourceDir ), "r" )
-  assert( imageList, "Could not open images.txt" )
-
-  for filename in imageList:lines() do
-    local srcPath = system.pathForFile( "resources/img/cards/" .. filename, resourceDir )
-    local dstPath = dstImagesPath .. "/" .. filename
-
-    copyFile( srcPath, dstPath )
-  end
-
-  io.close( imageList )
+  moveResourceFiles()
 
   return true
 end
@@ -394,17 +399,10 @@ end
 
 local function initPicturesTable( count )
 
-  local dstImagesPath = docsPath .. "/resources/img/cards"
-  --local srcImagesPath = resourcePath .. "/resources/img/cards"
-
   local imageList = io.open( system.pathForFile( "images.txt", resourceDir ), "r" )
   assert( imageList, "Could not open images.txt" )
 
   for filename in imageList:lines() do
-    local srcPath = system.pathForFile( "resources/img/cards/" .. filename, resourceDir )
-    local dstPath = dstImagesPath .. "/" .. filename
-
-    copyFile( srcPath, dstPath )
 
     local cmd = [[
       INSERT INTO pictures(filename, status) VALUES(
