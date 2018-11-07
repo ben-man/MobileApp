@@ -38,9 +38,9 @@ local sounds = {}
 
 -- sounds ---
 function loadSounds()
-  sounds["correct"] = audio.loadSound( "resources/sfx/correct.mp3" )
-  sounds["incorrect"] = audio.loadSound( "resources/sfx/incorrect.mp3" )
-  sounds["cheer"] = audio.loadSound( "resources/sfx/cheer.mp3" )
+  sounds["correct"] = audio.loadSound( "resources/sfx/correct.mp3", system.DocumentsDirectory )
+  sounds["incorrect"] = audio.loadSound( "resources/sfx/incorrect.mp3", system.DocumentsDirectory )
+  sounds["cheer"] = audio.loadSound( "resources/sfx/cheer.mp3", system.DocumentsDirectory )
 end
 
 function playSound(snd)
@@ -128,7 +128,7 @@ function TargetBox:new( targetDesc , ID)
   --group.x = targetDesc.x
   --group.y = targetDesc.y
   if rects[ID] ~= nil then rects[ID] = nil end
-  rects[ID] = display.newImageRect( group_a, "resources/img/TargetBox.png", 132, 132 )
+  rects[ID] = display.newImageRect( group_a, "resources/img/TargetBox.png", system.DocumentsDirectory, 132, 132 )
   if( rects[ID] ~= nil ) then
     rects[ID].anchorX = 0
     rects[ID].anchorY = 0
@@ -199,6 +199,7 @@ function Arrow:new( arrowDesc, idx )
   local rect = display.newImageRect(
     group_a,
     "resources/img/arrow2.png",
+    system.DocumentsDirectory,
     PrivacyGame.ARROW_WIDTH,
     PrivacyGame.ARROW_HEIGHT
   )
@@ -237,7 +238,7 @@ function Card:new( imgPath, idx, totalCards, cardName)
   --local border = display.newImageRect( group, img.sourceBox, 134, ySpace )
   --border.anchorX = 0
   --border.anchorY = 0
-  images[idx] = display.newImageRect( group_a, imgPath, 128, ySpace)
+  images[idx] = display.newImageRect( group_a, imgPath, system.DocumentsDirectory, 128, ySpace)
   images[idx].anchorX = 0
   images[idx].anchorY = 0
   images[idx].name = cardName
@@ -440,7 +441,11 @@ function TargetPanel:new()
   display.setDefault( "textureWrapX", "repeat" )
   display.setDefault( "textureWrapY", "mirroredRepeat" )
 
-  rect.fill = { type="image", filename="resources/img/cork-wallet.png" }
+  rect.fill = { 
+    type="image",
+    filename="resources/img/cork-wallet.png",
+    baseDir = system.DocumentsDirectory
+  }
 
   function o:addTarget( targetDesc, ID )
     TargetBox:new( targetDesc, ID )
@@ -460,12 +465,12 @@ function TargetPanel:new()
   end
 
   function o:createImgWin()
-    imgWin = display.newImageRect( group_b, "resources/img/correct.png", 160, 160 )
+    imgWin = display.newImageRect( group_b, "resources/img/correct.png", system.DocumentsDirectory, 160, 160 )
     imgWin.isVisible = false
   end
 
   function o:createImgLose()
-    imgLose = display.newImageRect( group_b, "resources/img/incorrect.png", 160, 160 )
+    imgLose = display.newImageRect( group_b, "resources/img/incorrect.png", system.DocumentsDirectory, 160, 160 )
     imgLose.isVisible = false
   end
 
@@ -477,7 +482,7 @@ function TargetPanel:new()
       sheetContentWidth = 768,
       sheetContentHeight = 64
     }
-    imgWinButtonS = graphics.newImageSheet( img, options )
+    imgWinButtonS = graphics.newImageSheet( img, system.DocumentsDirectory, options )
     imgWinButton = widget.newButton(
     {
         sheet = imgWinButtonS,
@@ -500,7 +505,7 @@ function TargetPanel:new()
       sheetContentWidth = 768,
       sheetContentHeight = 64
     }
-    imgWinButtonL = graphics.newImageSheet( img, options )
+    imgWinButtonL = graphics.newImageSheet( img, system.DocumentsDirectory, options )
     imgLoseButton = widget.newButton(
     {
         sheet = imgWinButtonL,

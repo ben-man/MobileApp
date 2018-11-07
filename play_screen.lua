@@ -117,6 +117,7 @@ function createMenu()
 		height      = 32,
 		--x           = menuArea.xMin + (menuArea.width/2),
 		--y           = menuArea.yMin,
+		baseDir = system.DocumentsDirectory,
 		defaultFile = 'resources/img/menu_white.png',
 		overFile    = 'resources/img/menu_white.png',
 		--label = "Menu",
