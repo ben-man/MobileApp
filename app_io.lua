@@ -128,8 +128,9 @@ local function initDirectories()
     assert( lfs.mkdir( "sfx" ), "Couldn't create 'sfx' directory in docsPath/resources" )
   end
 
-  if not ( lfs.chdir( path .. "img/cards" ) ) then
+  if not ( lfs.chdir( path .. "/img/cards" ) ) then
     --docsPath/resources/img/cards doesn't exist
+    assert( lfs.chdir( path .. "/img" ), "Couldn't chdir" )
     assert( lfs.mkdir( "cards" ), "Couldn't create 'cards' directory in docsPath/resources/img" )
   end
 
