@@ -12,7 +12,7 @@ physics.start()
 physics.setGravity( 0, 0 )
 
 local docsDir = system.DocumentsDirectory
-local img = {
+local imgList = {
   targetBox = "resources/img/TargetBox.png",
   sourceBox = "resources/img/SourceBox.png",
   arrow = "resources/img/arrow2.png"
@@ -121,41 +121,50 @@ group_b = display.newGroup()
 group_c = display.newGroup()
 
 function TargetBox:new( targetDesc , ID)
-  --local o = {}
+  local o = {}
   local targetArea = app_layout.targetArea
   --o.matchingCard = targetDesc.matchingCard
 
+  local grp = display.newGroup()
   --group.x = targetDesc.x
   --group.y = targetDesc.y
-  if rects[ID] ~= nil then rects[ID] = nil end
-  rects[ID] = display.newImageRect( group_a, "resources/img/TargetBox.png", system.DocumentsDirectory, 132, 132 )
-  if( rects[ID] ~= nil ) then
-    rects[ID].anchorX = 0
-    rects[ID].anchorY = 0
+  if rects[ID] ~= nil then 
+    rects[ID] = nil 
+  end
+  local box = display.newRect( grp, 0, 0, 130, 130 )
+  box.strokeWidth = 4
+  box:setFillColor( 0.85, 0.48, 0.15 )
+  box:setStrokeColor( 0, 0, 0 )
+  --rects[ID] = display.newImageRect( group_a, "resources/img/TargetBox.png", system.DocumentsDirectory, 132, 132 )
+  group_a:insert( grp )
+  rects[ID] = grp
+  --if( rects[ID] ~= nil ) then
+    --rects[ID].anchorX = 0
+    --rects[ID].anchorY = 0
     rects[ID].name = targetDesc.matchingCard
     foundedObjets[ID] = false
-    --rects[ID].x = targetDesc.x
-    --rects[ID].y = targetDesc.y
+    rects[ID].x = targetDesc.x + (PrivacyGame.TARGETBOX_WIDTH/2)
+    rects[ID].y = targetDesc.y + (PrivacyGame.TARGETBOX_HEIGHT/2)
 
     local textOptions = {
-      parent = group_a,
+      parent = grp,
       text = targetDesc.text,
-      width = 128,
-      height = 128,
+      width = PrivacyGame.TEXT_WIDTH,
+      height = PrivacyGame.TEXT_HEIGHT,
       align = "center"
     }
     local text = display.newText( textOptions )
-    text.anchorX = 0
-    text.anchorY = 0
-    text.x = targetDesc.x
-    text.y = targetDesc.y
+    --text.anchorX = 0
+    --text.anchorY = 0
+    --text.x = targetDesc.x
+    --text.y = targetDesc.y
     textRects[ID] = text
 
-    --o.displayRef = group
+    o.displayRef = grp
     physics.addBody(rects[ID],"dynamic",{isSensor=true,radius=25})
     rects[ID]:addEventListener("collision",function(e) self:onCollision(rects[ID], e) end)
-  end
-  --return o
+  --end
+  return o
 end
 
 -- [[ colision system ]] --
@@ -197,26 +206,19 @@ function Arrow:new( arrowDesc, idx )
   local targetArea = app_layout.targetArea
 
   local rect = display.newImageRect(
-    group_a,
-    "resources/img/arrow2.png",
+    imgList.arrow,
     system.DocumentsDirectory,
     PrivacyGame.ARROW_WIDTH,
     PrivacyGame.ARROW_HEIGHT
   )
-  if rect ~= nil then
+
   rect.x = arrowDesc.x
   rect.y = arrowDesc.y
   rect:scale( arrowDesc.scaleX, arrowDesc.scaleY )
+  rect:rotate( arrowDesc.angle )
 
-  if((idx % (#rects/2)) ~= 0) then
-    rect:rotate( arrowDesc.angle + 180 )
-  else
-     rect:rotate( arrowDesc.angle )
-  end
   arrows[idx] = rect
-
-  end
-  --o.displayRef = group
+  o.displayRef = rect
 
   return o
 end
@@ -332,6 +334,20 @@ CardDeck = {}
 function CardDeck:new()
   local o = {cards = {}, numCards = 0}
   local group = display.newGroup()
+  local cardArea = app_layout.cardArea
+
+  local scrollView = widget.newScrollView{
+    x = cardArea.xMin,
+    y = cardArea.yMin,
+    width = cardArea.width,
+    height = cardArea.height,
+    hideBackground = true,
+    hideScrollBar = true,
+    horizontalScrollDisabled = true
+  }
+  scrollView.anchorX = 0
+  scrollView.anchorY = 0
+  group:insert( scrollView )
 
   function o:add( cardDesc, totalCards, i )
     -- add name match for collision
@@ -447,13 +463,13 @@ function TargetPanel:new()
   }
 
   function o:addTarget( targetDesc, ID )
-    TargetBox:new( targetDesc, ID )
-    --self.contents:insert( t.displayRef )
+    local t = TargetBox:new( targetDesc, ID )
+    self.contents:insert( t.displayRef )
   end
 
   function o:addArrow( arrowDesc , ID)
     local a = Arrow:new( arrowDesc , ID)
-    --self.contents:insert( a.displayRef )
+    self.contents:insert( a.displayRef )
   end
 
   function o:createTextScore(size)
@@ -519,9 +535,6 @@ function TargetPanel:new()
     imgLoseButton.isVisible = false
   end
 
-
-
-
   function o:fitContentsToPanel()
     self.contents.x = targetArea.xMin + (rect.width/2)
     self.contents.y = targetArea.yMin + (rect.height/2)
@@ -537,63 +550,10 @@ function TargetPanel:new()
     imgWin.x = rect.width/2
     imgWin.y = rect.height
 
-
     imgLose.x = rect.width/2
     imgLose.y = rect.height
 
-    local xScale = 0.35
-    local yScale = 0.4
-    local rectWidth = 0
-    local rectHeight = 0
-    local arrowWidth= 0
-    local arrowHeight= 0
-    if(rects[1] ~= nil ) then
-      rectWidth = rects[1].width  * xScale
-      rectHeight= rects[1].height  * yScale
-    end
-    if(arrows[1] ~= nil ) then
-      arrowWidth = arrows[1].width * xScale
-      arrowHeight = arrows[1].height * yScale
-    end
-    local xPadding = 0.05 * rect.width
-    local yPadding = 0.15 * rect.height
-    local xOffset = xPadding
-    local yOffset = yPadding
-    local totalCards = #rects
-    local totalArrows = #arrows
-    local textYpadding = 0.05 * rectWidth
-    for i=1,#rects,1 do
-      rects[i].x =  xOffset + targetArea.xMin --+ rects[i].contentWidth/2
-      rects[i].y =  yOffset + targetArea.yMin --+ rects[i].contentHeight/2
-      rects[i]:scale(xScale,yScale)
-
-      textRects[i].x =  xOffset + targetArea.xMin --+ rects[i].contentWidth/2
-      textRects[i].y =  textYpadding + yOffset + targetArea.yMin --+ rects[i].contentHeight/2
-      textRects[i]:scale(xScale,yScale)
-
-      xOffset = xOffset + (rect.width - (#rects/2 * rectWidth) + (math.floor(#arrows/2) * arrowWidth) + 2 * xPadding)/(#rects + 1) + rectWidth
-
-      if i <= #arrows and (i % (#rects/2) ~= 0)then
-        arrows[i].x = xOffset + targetArea.xMin --+ rects[i].contentWidth/2  -
-        arrows[i].y = yOffset + targetArea.yMin + arrowHeight/2
-        arrows[i]:scale(xScale,yScale)
-        xOffset = xOffset + (rect.width - (#rects/2 * rectWidth) + (math.floor(#arrows/2) * arrowWidth) + 2 * xPadding)/(#rects + 1)
-      elseif i <= #arrows and (i % (#rects/2) == 0)then
-        xOffset = xOffset - (rect.width - (#rects/2 * rectWidth) + (math.floor(#arrows/2) * arrowWidth) + 2 * xPadding)/(#rects + 1)
-                  - arrowWidth/2
-        arrows[i].x = xOffset + targetArea.xMin --+ rects[i].contentWidth/2  -
-        arrows[i].y = yOffset + targetArea.yMin + arrowHeight/2 + rectHeight * 1.1
-        arrows[i]:scale(xScale,yScale)
-
-      end
-      -- 1/2 of rects
-      if(i % (#rects/2) == 0)then
-        yOffset = yOffset + rect.height/2
-        xOffset = xPadding
-      end
-    end
-
-    --  rects["other"]:scale( ratio, ratio )
+    self.contents:scale( ratio, ratio )
   end
 
   --group_d:insert( contents )
