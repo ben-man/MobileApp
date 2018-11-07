@@ -97,7 +97,7 @@ local function moveResourceFiles()
   assert( manifest, "Could not open manifest.txt" )
 
   for name in manifest:lines() do
-    local filename = l:match("(.+)%..+")
+    local filename = name:match("(.+)%..+")
     local srcPath = system.pathForFile( name, resourceDir )
     local dstPath = system.pathForFile( filename, docsDir )
 
