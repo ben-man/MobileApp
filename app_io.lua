@@ -269,7 +269,6 @@ local function loadNextScenario()
     local cmd = "SELECT id FROM scenarios ORDER BY id"
 
     for row in db:nrows( cmd ) do
-      --currentScenario = row
       return loadScenario( row.id )
     end
 
@@ -284,7 +283,14 @@ local function loadNextScenario()
     end
 
     --No scenarios left; you win
-    currentScenario = nil
+      --currentScenario = nil
+
+        --Go back to the start
+        local cmd = "SELECT id FROM scenarios ORDER BY id"
+
+        for row in db:nrows( cmd ) do
+          return loadScenario( row.id )
+        end
     return nil
   end
 end
