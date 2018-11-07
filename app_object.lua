@@ -350,7 +350,7 @@ TargetPanel = {}
 
 function cleanObjects()
   for k,v in pairs(rects) do
-    print(rects[k].name)
+    --print(rects[k].name)
     if(rects[k] ~= nil) then
       rects[k]:removeEventListener("collision",function(e) self:onCollision(rects[k], e) end)
       rects[k]:removeSelf()
@@ -489,7 +489,7 @@ function TargetPanel:new()
         defaultFrame = 1,
         overFrame = 2,
         label = "",
-        onEvent = function(e) resetGameEvent(e) end
+        onEvent = function(e) continueGameEvent(e) end
     })
     imgWinButton:scale(0.5,0.4)
     imgWinButton.x = txtScore.x
@@ -660,6 +660,13 @@ function DescArea:new( name, desc )
   self.ref = group
 
   return o
+end
+
+function continueGameEvent(event)
+  if(event.phase == "began")then
+    app_io.loadNextScenario()
+    app_game.buildGame()
+  end
 end
 
 function resetGameEvent(event)

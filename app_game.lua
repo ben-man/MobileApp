@@ -51,7 +51,7 @@ end
 
 function M.buildGame()
 
-  local s = assert( app_io.loadNextScenario(), "Current scenario is nil")
+  local s = assert( app_io.getCurrentScenario(), "Current scenario is nil")
 
   -- the order is importante -> deck above panel
 

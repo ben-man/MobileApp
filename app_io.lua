@@ -194,6 +194,7 @@ local function loadScenario( id )
 
   currentScenario = s
   setField( "scenarioId", s.id )
+  print( "scenario: " .. s.id )
   return s
 end
 
@@ -494,6 +495,7 @@ end
   end
 
   db = assert( sqlite3.open( dbPath ), "Failed to open database..." )
+  loadNextScenario()
 --end
 
 return M
