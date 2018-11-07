@@ -148,8 +148,19 @@ function createMenu()
 		  padding      = 10,
 		  options      = dropdownOptions
 	} 
-	  
-	
+
+---[[ Skip through scenarios - for testing only.
+	local fastForwardButton = display.newImageRect( "resources/img/arrow2.png", system.DocumentsDirectory, 24, 24 )
+	fastForwardButton.x = menuArea.xMin + (menuArea.width/2)
+	fastForwardButton.y = button.contentBounds.yMax + (button.contentHeight/2)
+
+	local function tapListener( event )
+		app_io.loadNextScenario()
+		app_game.buildGame()
+		return true
+	end
+	fastForwardButton:addEventListener( "tap", tapListener )
+--]]	
 end
 
 

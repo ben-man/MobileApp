@@ -407,7 +407,6 @@ function cleanObjects()
     imgLoseButton.isVisible = false
   end
 
-  Menu:hide()
   DescArea:clear()
 
   score = intialScore
@@ -622,7 +621,10 @@ function DescArea:new( name, desc )
 
   local group = display.newGroup()
 
-  local rect = display.newRect( group, descArea.xMin, descArea.yMin, descArea.width, descArea.height )
+  local topPart = descArea.height*0.3
+  local bottomPart = descArea.height - topPart
+
+  local rect = display.newRect( group, descArea.xMin, descArea.yMin + topPart, descArea.width, descArea.height - topPart )
   rect.anchorX = 0
   rect.anchorY = 0
   rect:setFillColor( 0, 0, 1, 0.3 )
@@ -631,31 +633,51 @@ function DescArea:new( name, desc )
     parent = group,
     text = name,
     font = "skranji-bold.ttf",
-    fontSize = descArea.height*0.2,
+    fontSize = topPart*(2/3),
     x = descArea.xMin,
     y = descArea.yMin,
-    width = descArea.width,
-    height = descArea.height*0.3,
+    --width = descArea.width,
+    --height = topPart,
     align = "left"
   }
   local titleTxt = display.newText( titleOpts )
   titleTxt.anchorX = 0
   titleTxt.anchorY = 0
 
+  if ( titleTxt.contentWidth > descArea.width ) then
+    local scale = descArea.width/titleTxt.contentWidth
+    titleTxt:scale( scale, scale )
+  end
+
+  local scrollView = widget.newScrollView{
+    x = descArea.xMin + (descArea.width/2),
+    y = descArea.yMin + topPart + (bottomPart/2),
+    width = descArea.width,
+    height = bottomPart*0.9,
+    hideBackground = true,
+    hideScrollBar = true,
+    horizontalScrollDisabled = true
+  }
+  --scrollView.anchorX = 0
+  --scrollView.anchorY = 0
+  group:insert( scrollView )
+
   local descOpts = {
-    parent = group,
+    --parent = group,
     text = desc,
     font = native.systemFont,
     fontSize = descArea.height*0.7*0.2,
-    x = descArea.xMin,
-    y = descArea.yMin + titleOpts.height,
+    x = 0,
+    y = 0,
     width = descArea.width,
-    height = descArea.height*0.7,
+    height = 0,
     align = "left"
   }
   local descTxt = display.newText( descOpts )
   descTxt.anchorX = 0
   descTxt.anchorY = 0
+
+  scrollView:insert( descTxt )
 
   self.ref = group
 
