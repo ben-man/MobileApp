@@ -98,6 +98,7 @@ local function moveResourceFiles()
 
   for name in manifest:lines() do
     local filename = name:match("(.+)%..+")
+    print( "manifest file: " .. filename )
     local srcPath = system.pathForFile( name, resourceDir )
     local dstPath = system.pathForFile( filename, docsDir )
 

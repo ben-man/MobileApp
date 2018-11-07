@@ -12,7 +12,6 @@ resources/img/arrow.png.txt
 resources/img/arrow2.png.txt
 resources/img/button_continue_spritesheet.png.txt
 resources/img/button_retry_spritesheet.png.txt
-resources/img/cards
 resources/img/cork-wallet.png.txt
 resources/img/correct.png.txt
 resources/img/handle.png.txt
