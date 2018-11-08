@@ -58,7 +58,7 @@ function createMenu()
 			{
 			title     = 'Contact Us',
 			action    = function()
-			  native.showAlert('Contact Us', 'Email', {'Ok'}) 
+			  native.showAlert('Contact Us', 'Email xyz@xyz.com', {'Ok'}) 
 			end
 			},
 		}
@@ -87,7 +87,7 @@ function createMenu()
 			end
 			},
 			{
-			title     = 'Scenarios',
+			title     = 'Manage Scenarios',
 			action    = function()
 				composer.gotoScene( "manage_scenerio_screen", "fade", 20 )  
 			end
@@ -95,7 +95,7 @@ function createMenu()
 			{
 			title     = 'Contact Us',
 			action    = function()
-			  native.showAlert('Contact Us', 'Email', {'Ok'})
+			  native.showAlert('Contact Us', 'Email xyz@xyz.com', {'Ok'})
 			end
 			},
 		}
