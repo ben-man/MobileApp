@@ -44,15 +44,15 @@ local function onRowRender( event )
   local row        = event.row
   local rowHeight  = row.contentHeight
   local rowWidth   = row.contentWidth
-  local difficulty      = row.params.difficulty
   local name      = row.params.name
   local leftIcon   = row.params.leftIcon or nil
   local rightIcon  = row.params.rightIcon or nil
   local titleColor = row.params.titleColor or {0,0,0}
 
+
   local options = {
       parent   = row,
-      text     = difficulty,    
+      text     = name,    
       x        = 20,
       y        = rowHeight * .5,
       width    = rowWidth,
@@ -60,55 +60,69 @@ local function onRowRender( event )
       fontSize = 10,
       align    = 'left'
   }
-
-  local options2 = {
-      parent   = row,
-      text     = name,    
-      x        = 60,
-      y        = rowHeight * .5,
-      width    = rowWidth,
-      font     = native.systemFont,   
-      fontSize = 10,
-      align    = 'left'
-  }
  
-  local title   = display.newText( options)
-  title.anchorX = 0
-  title:setFillColor( titleColor )
-
-
-	 
-	local myImage = display.newText( options2)
+ 
+	local myImage = display.newText( options)
   myImage.anchorX = 0
   myImage:setFillColor( titleColor )
   row:insert(myImage)
+  
+local function buttonEvent( event )
 
-	local function buttonEvent( event )
- 	    
- 	    app_io.deleteScenario(row.params.id)
-
- 	    tableView:deleteRows( { row.id } )
-		 
+        local options = {
+         effect = "fade",
+         time = 20,
+         params = { id = row.params.id }
+       }
+        
+        composer.gotoScene( "play_screen", options ) 
+     
     
-		return true
-	end
+    return true
+  end
+
+  local function buttonEvent2( event )
+      
+      app_io.deleteImage(row.params.id)
+
+      tableView:deleteRows( { row.id } )
+     
+    
+    return true
+  end
  
 
    local eventButton = widget.newButton(
-	{
-		label = 'Delete', 
-		shape = "rectangle",
-		x = 320,
-		y = rowHeight * .5,
-		width = 120,
-		height = 25,
-		font = appFont,
-		fontSize = 12,
-		fillColor = { default={ 0.1,0.3,0.6,1 }, over={ 0.1,0.3,0.6,1 } },
-		labelColor = { default={ 1,1,1,1 }, over={ 1,1,1,0.8 } },
-		onRelease = buttonEvent,
-	})
+  {
+    label = 'Play', 
+    shape = "rectangle",
+    x = 300,
+    y = rowHeight * .5,
+    width = 60,
+    height = 25,
+    font = appFont,
+    fontSize = 12,
+    fillColor = { default={ 0.1,0.3,0.6,1 }, over={ 0.1,0.3,0.6,1 } },
+    labelColor = { default={ 1,1,1,1 }, over={ 1,1,1,0.8 } },
+    onRelease = buttonEvent,
+  })
     row:insert(  eventButton )
+
+    local eventButton2 = widget.newButton(
+  {
+    label = 'Delete', 
+    shape = "rectangle",
+    x = 365,
+    y = rowHeight * .5,
+    width = 60,
+    height = 25,
+    font = appFont,
+    fontSize = 12,
+    fillColor = { default={ 0.1,0.3,0.6,1 }, over={ 0.1,0.3,0.6,1 } },
+    labelColor = { default={ 1,1,1,1 }, over={ 1,1,1,0.8 } },
+    onRelease = buttonEvent2,
+  })
+    row:insert(  eventButton2 )
 
 end
 
@@ -174,7 +188,7 @@ function scene:create( event )
 
 
 	 
-	text1 = display.newText( "Manage Scenarios", 0, 0, font, 18 )
+	text1 = display.newText( "Manage Images", 0, 0, font, 18 )
 	text1:setFillColor( 255 )
 	text1.x, text1.y = display.contentWidth * 0.5, 20
 	sceneGroup:insert( text1 )
