@@ -92,23 +92,7 @@ local function buttonEvent( event )
   end
  
 
-   local eventButton = widget.newButton(
-  {
-    label = 'Play', 
-    shape = "rectangle",
-    x = 300,
-    y = rowHeight * .5,
-    width = 60,
-    height = 25,
-    font = appFont,
-    fontSize = 12,
-    fillColor = { default={ 0.1,0.3,0.6,1 }, over={ 0.1,0.3,0.6,1 } },
-    labelColor = { default={ 1,1,1,1 }, over={ 1,1,1,0.8 } },
-    onRelease = buttonEvent,
-  })
-    row:insert(  eventButton )
-
-    local eventButton2 = widget.newButton(
+    local eventButton = widget.newButton(
   {
     label = 'Delete', 
     shape = "rectangle",
@@ -120,9 +104,9 @@ local function buttonEvent( event )
     fontSize = 12,
     fillColor = { default={ 0.1,0.3,0.6,1 }, over={ 0.1,0.3,0.6,1 } },
     labelColor = { default={ 1,1,1,1 }, over={ 1,1,1,0.8 } },
-    onRelease = buttonEvent2,
+    onRelease = buttonEvent,
   })
-    row:insert(  eventButton2 )
+    row:insert(  eventButton )
 
 end
 
