@@ -32,6 +32,8 @@ local txtScore
 -- image win
 local imgWin
 local imgWinButton
+local imgLose
+local imgLoseButton
 
 local sounds = {}
 
@@ -40,6 +42,7 @@ local sounds = {}
 function loadSounds()
   sounds["correct"] = audio.loadSound( "resources/sfx/correct.mp3", system.DocumentsDirectory )
   sounds["incorrect"] = audio.loadSound( "resources/sfx/incorrect.mp3", system.DocumentsDirectory )
+  sounds["sad"] = audio.loadSound( "resources/sfx/sad.mp3" ), system.DocumentsDirectory )
   sounds["cheer"] = audio.loadSound( "resources/sfx/cheer.mp3", system.DocumentsDirectory )
 end
 
@@ -519,9 +522,6 @@ function TargetPanel:new()
     imgLoseButton.isVisible = false
   end
 
-
-
-
   function o:fitContentsToPanel()
     self.contents.x = targetArea.xMin + (rect.width/2)
     self.contents.y = targetArea.yMin + (rect.height/2)
@@ -694,6 +694,12 @@ end
 function resetGameEvent(event)
   if(event.phase == "began")then
     app_game.buildGame()
+  end
+end
+
+function resetGameEventCurrent(event)
+  if(event.phase == "began")then
+    app_game.buildGameCurrent()
   end
 end
 
