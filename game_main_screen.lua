@@ -31,7 +31,18 @@ local dropdownOptions = {
     action    = function() app_game.buildGame() end
 
   },
-  
+  {
+    title     = 'Editor',
+    action    = function()
+
+    end
+  },
+  {
+    title     = 'Editor2',
+    action    = function()
+
+    end
+  },
   {
     title     = 'Help',
     action    = function()
