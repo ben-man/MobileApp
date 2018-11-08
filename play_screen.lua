@@ -36,12 +36,7 @@ function createMenu()
 				composer.gotoScene( "play_screen", "fade", 20 ) 
 			end
 			},
-			{
-			title     = 'Editor',
-			action    = function()
-
-			end
-			},
+			
 			{
 			title     = 'Login',
 			action    = function() 
@@ -63,7 +58,7 @@ function createMenu()
 			{
 			title     = 'Contact Us',
 			action    = function()
-			  native.showAlert('Contact Us', 'Email', {'Ok'}) 
+			  native.showAlert('Contact Us', 'Email xyz@xyz.com', {'Ok'}) 
 			end
 			},
 		}
@@ -76,17 +71,13 @@ function createMenu()
 			end
 
 			},
-			{
-			title     = 'Editor',
-			action    = function()
-
-			end
-			},
+			
 			{
 			title     = 'Logout',
 			action    = function()  
 				isAdmin = 0 
 				createMenu()
+				composer.gotoScene( "play_screen", "fade", 20 )
 			end
 			},
 			{
@@ -205,7 +196,17 @@ function scene:show( event )
 		composer.removeScene( "manage_image_screen" )
 	end
    
-	app_game.buildGame() 
+	--app_io.printScenario( app_io.getCurrentScenario() )
+	if  event.params == nil then
+
+		app_io.printScenario( app_io.loadNextScenario() )
+		app_game.buildGame() 
+
+	else
+		app_io.printScenario( app_io.loadScenario(event.params.id) )
+		app_game.buildGame() 
+
+	end		
 	   
 	
 end
