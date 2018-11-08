@@ -199,17 +199,7 @@ function scene:show( event )
 		composer.removeScene( "manage_image_screen" )
 	end
    
-	--app_io.printScenario( app_io.getCurrentScenario() )
-	if  event.params == nil then
-
-		app_io.printScenario( app_io.loadNextScenario() )
-		app_game.buildGame() 
-
-	else
-		app_io.printScenario( app_io.loadScenario(event.params.id) )
-		app_game.buildGame() 
-
-	end		
+	app_game.buildGame() 	
      
 	   
 	
