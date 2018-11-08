@@ -12,7 +12,7 @@ local function makeDeck( cards )
 
   for i = 1, #cards do
     -- #cards used to adjust images layout
-    deck:add( cards[i], #cards, i)
+    deck:add( cards[i] )
   end
 
   return deck
@@ -22,12 +22,11 @@ local function makeTargetPanel( targets, arrows )
   local panel = TargetPanel:new()
 
   for i=1, #targets do
-    -- ID target
-    panel:addTarget( targets[i], i )
+    panel:addTarget( targets[i] )
   end
 
   for i = 1, #arrows do
-    panel:addArrow( arrows[i], i )
+    panel:addArrow( arrows[i] )
   end
 
   panel:createTextScore(14)
@@ -60,7 +59,6 @@ function M.buildGame()
   makeDescArea( s.name, s.description )
   makeTargetPanel( s.targets, s.arrows )
   makeDeck( s.cards )
-  --makeMenu()
 
 end
 
