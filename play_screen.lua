@@ -37,12 +37,6 @@ function createMenu()
 			end
 			},
 			{
-			title     = 'Editor',
-			action    = function()
-
-			end
-			},
-			{
 			title     = 'Login',
 			action    = function() 
 				composer.gotoScene( "login_screen", "fade", 20 )    
@@ -63,7 +57,7 @@ function createMenu()
 			{
 			title     = 'Contact Us',
 			action    = function()
-			  native.showAlert('Contact Us', 'Email', {'Ok'}) 
+			  native.showAlert('Contact Us', 'Email xyz@xyz.com', {'Ok'}) 
 			end
 			},
 		}
@@ -77,16 +71,11 @@ function createMenu()
 
 			},
 			{
-			title     = 'Editor',
-			action    = function()
-
-			end
-			},
-			{
 			title     = 'Logout',
 			action    = function()  
 				isAdmin = 0 
 				createMenu()
+				composer.gotoScene( "play_screen", "fade", 20 ) 
 			end
 			},
 			{
@@ -104,7 +93,7 @@ function createMenu()
 			{
 			title     = 'Contact Us',
 			action    = function()
-			  native.showAlert('Contact Us', 'Email', {'Ok'})
+			  native.showAlert('Contact Us', 'Email xyz@xyz.com', {'Ok'})
 			end
 			},
 		}
@@ -142,7 +131,6 @@ function createMenu()
 		  x            = menuArea.xMin + (menuArea.width/2),
 		  y            = menuArea.yMin,
 		  toggleButton = button,
-
 		  width        = 140,
 		  marginTop    = 12,
 		  padding      = 10,
