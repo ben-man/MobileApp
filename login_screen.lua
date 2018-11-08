@@ -16,7 +16,7 @@ local widget = require("widget") -- for status label
 -- ----------------------------------------------------------------------------
 -- INITIALIZE VALUES
 -- ----------------------------------------------------------------------------
-local font = "HelveticaNeue" or system.nativeFont
+local system.nativeFont
 local userid = nil
 local password = nil 
 local _W = display.contentWidth
