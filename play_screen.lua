@@ -68,7 +68,6 @@ function createMenu()
 			action    = function() 
 				composer.gotoScene( "play_screen", "fade", 20 ) 
 			end
-
 			},
 			{
 			title     = 'Logout',
@@ -88,6 +87,12 @@ function createMenu()
 			title     = 'Manage Scenarios',
 			action    = function()
 				composer.gotoScene( "manage_scenerio_screen", "fade", 20 )  
+			end
+			},
+			{
+			title     = 'Help',
+			action    = function()
+			  native.showAlert('Help', 'What is it\nThe Privacy Game is a fun way to help you understand and protect your privacy online.\n\nHow does it work?\nOn the screen you will see squares with text representing different things related to your privacy online. The goal is to match the correct images to the different squares. You will begin working with an easy scenario, and the difficulty will increase as you progress through the levels. There is a scoring system, where if you happen to answer incorrectly, points will be deducted from your overall score.\n\nHow does this benefit you?\nBy matching pictures to the different labels, it is reinforcing the different scenarios you may be faced with online. It helps you identify what these potential harms may be, and then how to deal with them in an easy and understandable way. As the difficulty increases, you will learn to deal with more complex scenarios, applicable to real and tangible harms in everyday life. You will learn about the legislation and other legal instruments that are designed to protect you when using the internet.', {'Ok'})
 			end
 			},
 			{
