@@ -42,7 +42,7 @@ local sounds = {}
 function loadSounds()
   sounds["correct"] = audio.loadSound( "resources/sfx/correct.mp3", system.DocumentsDirectory )
   sounds["incorrect"] = audio.loadSound( "resources/sfx/incorrect.mp3", system.DocumentsDirectory )
-  sounds["sad"] = audio.loadSound( "resources/sfx/sad.mp3" ), system.DocumentsDirectory )
+  sounds["sad"] = audio.loadSound( "resources/sfx/sad.mp3", system.DocumentsDirectory )
   sounds["cheer"] = audio.loadSound( "resources/sfx/cheer.mp3", system.DocumentsDirectory )
 end
 
