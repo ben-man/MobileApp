@@ -155,7 +155,6 @@ end
 	end
 	fastForwardButton:addEventListener( "tap", tapListener )
 --]]	
-end
 
 
 function scene:create( event )
