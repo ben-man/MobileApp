@@ -9,20 +9,14 @@ local dropdown = require( "dropdown" )
 -- ----------------------------------------------------------------------------
 -- OBJECTS
 -- ----------------------------------------------------------------------------
-Menu = {}
-TargetPanel = {}
-DescArea = {}
-CardDeck = {}
-
 Arrow = {}
 TargetBox = {}
 Card = {}
--- ----------------------------------------------------------------------------
--- Physics engine
--- ----------------------------------------------------------------------------
-local physics = require "physics"
-physics.start()
-physics.setGravity( 0, 0 )
+
+--Singletons
+TargetPanel = {}
+DescArea = {}
+CardDeck = {}
 
 local docsDir = system.DocumentsDirectory
 
@@ -74,61 +68,6 @@ function hasGameEnded()
 end
 
 -- ----------------------------------------------------------------------------
--- MENU
--- ----------------------------------------------------------------------------
-local menuArea = app_layout.menuArea
-
-function Menu:hide()
-  if( self.ref ) then
-    self.ref.isVisible = false
-  end
-end
-
-function Menu:new()
-  local o = {}
-
-  if( self.ref ) then
-    self.ref.isVisible = true
-    return o
-  end
-
-  local myDropdown
-
-  local button = widget.newButton{
-    width       = 32,
-    height      = 32,
-    defaultFile = 'resources/img/menu_white.png',
-    overFile    = 'resources/img/menu_white.png',
-    onEvent     = function( event )
-      local target = event.target
-      local phase  = event.phase
-      if phase == 'began' then
-        target.alpha = .2
-      else
-        target.alpha = 1
-        if phase ==  'ended' then
-          myDropdown:toggle()
-        end
-      end
-    end
-  }
-  button.anchorY = 0
-  
-  myDropdown     = Dropdown.new{
-    x            = menuArea.xMin + (menuArea.width/2),
-    y            = menuArea.yMin,
-    toggleButton = button,
-  
-    width        = 140,
-    marginTop    = 12,
-    padding      = 10,
-    options      = dropdownOptions
-  }
-
-  self.ref = button
-end
-
--- ----------------------------------------------------------------------------
 -- TARGET BOX
 -- ----------------------------------------------------------------------------
 
@@ -158,19 +97,27 @@ function TargetBox:new( targetDesc )
   }
   local text = display.newText( textOptions )
 
-  physics.addBody( box, "dynamic", {isSensor=true, radius=25} )
+  --physics.addBody( box, "dynamic", {isSensor=true, radius=25} )
 
   function o:attachCard( card )
-    --card.displayRef.x = 0
-    --card.displayRef.y = 0
-    --grp:insert( card.displayRef )
+    card.attachedTo = self
+    self.ref:insert( card.ref, true )
+    --local newX, newY = card.ref:localToContent( 0, 0 )
+    --card.ref.x = newX
+    --card.ref.y = newY
+    --local ratio = self.ref.contentWidth/card.ref.contentWidth
+    --card.ref:scale( ratio, ratio )
   end
 
-  function o:detachCard()
-
+  function o:containsPoint( x, y )
+    local bounds = self.ref.contentBounds
+    if ( x > bounds.xMin and x < bounds.xMax and y > bounds.yMin and y < bounds.yMax ) then
+      return true
+    end
+    return false
   end
 
-  o.displayRef = grp
+  o.ref = grp
   box.appObject = o
 
   return o
@@ -196,7 +143,7 @@ function Arrow:new( arrowDesc, idx )
   rect:scale( arrowDesc.scaleX, arrowDesc.scaleY )
   rect:rotate( arrowDesc.angle )
 
-  o.displayRef = rect
+  o.ref = rect
 
   return o
 end
@@ -222,18 +169,53 @@ function Card:new( imgPath, idx )
 
   -- [[ movement touch ]] --
   function o:touch( event )
-    local card = event.target
+    local card = event.target.appObject
     
     if ( event.phase == "began" ) then
 
-        display.getCurrentStage():setFocus( card )
-        --images[idx].isFocus = true
-        transition.to( card, { x=event.x, y=event.y, time=10} )
+      local stage = display.getCurrentStage()
+      CardDeck:lock()
+      stage:insert( card.ref )
+      stage:setFocus( card.ref )
+      card.ref.anchorY = 0.5
+      card.returnTo = {}
+      card.returnTo.x, card.returnTo.y = card.ref:localToContent( 0, 0 )
+      card.returnTo.scale = card.ref.xScale
+      transition.to( card.ref, { x=event.x, y=event.y, time=10} )
+      return true
 
     elseif ( event.phase == "moved" ) then
 
-          card.x = event.x
-          card.y = event.y
+      if ( card.attachedTo ) then
+        local target = card.attachedTo
+        if ( target:containsPoint( event.x, event.y ) ) then
+          return true
+        else
+          card.attachedTo = nil
+          local stage = display.getCurrentStage()
+          stage:insert( card.ref, true )
+          card.ref:scale( card.returnTo.scale, card.returnTo.scale )
+          card.ref.x = event.x
+          card.ref.y = event.y
+    
+          return true
+        end
+      end
+
+
+      for i = 1, TargetPanel.numTargets do
+        local target = TargetPanel.targets[i]
+        if ( target:containsPoint( event.x, event.y ) ) then
+          card.returnTo.size = card.ref.contentWidth
+          target:attachCard( card )
+          return true
+        end
+      end
+
+      card.ref.x = event.x
+      card.ref.y = event.y
+
+      return true
 
     elseif ( event.phase == "ended" or event.phase == "cancelled" ) then
       
@@ -242,13 +224,13 @@ function Card:new( imgPath, idx )
       end
 
       display.getCurrentStage():setFocus( nil )
-      --images[idx].isFocus = nil
+
       if not foundedCard then
         transition.to( images[idx], { x= CardsLocation[idx].x, y=CardsLocation[idx].y, time=450} )
         score = score - scorePointsToAdd
         -- redraw score
         txtScore.text = "Points: " .. score
-      -- onFoundCard
+        -- onFoundCard
         playSound("incorrect")
 
       else
@@ -286,7 +268,7 @@ function Card:new( imgPath, idx )
 
     if ( event.phase == "began" ) then
         card.isAttached = true
-        target.attachCard( card )
+        target:attachCard( card )
     elseif ( event.phase == "ended" ) then
         card.isAttached = false
         target.detachCard()
@@ -296,9 +278,9 @@ function Card:new( imgPath, idx )
   --addback:
   --physics.addBody( image,"dynamic",{isSensor=true,radius=25} )
   --image:addEventListener( "collision", o )
-  --image:addEventListener( "touch", o )
+  image:addEventListener( "touch", o )
 
-  o.displayRef = image
+  o.ref = image
   image.appObject = o
 
   return o
@@ -308,21 +290,33 @@ end
 -- CARD DECK - A set of cards
 -- ----------------------------------------------------------------------------
 
+function CardDeck:clear()
+  if( self.ref ) then
+    self.ref:removeSelf()
+    self.ref = nil
+  end
+end
+
 function CardDeck:new()
-  local o = {
-    cards = {},
-    numCards = 0,
-    scaleFactor = PrivacyGame.CARDS_SCALE,
-  }
+
+  if ( self.ref ) then
+    self:clear()
+  end
+
+  self.cards = {}
+  self.numCards = 0
+  self.scaleFactor = PrivacyGame.CARDS_SCALE
+  self.gap = PrivacyGame.CARDS_GAP
 
   local grp = display.newGroup()
   local cardArea = app_layout.cardArea
+  local descArea = app_layout.descArea
 
   local scrollView = widget.newScrollView{
     x = cardArea.xMin,
-    y = cardArea.yMin,
+    y = cardArea.yMin + descArea.titleHeight,
     width = cardArea.width,
-    height = cardArea.height,
+    height = cardArea.height - descArea.titleHeight,
     hideBackground = true,
     hideScrollBar = true,
     horizontalScrollDisabled = true
@@ -331,51 +325,58 @@ function CardDeck:new()
   scrollView.anchorY = 0
   grp:insert( scrollView )
 
-  function o:setScale( scaleFactor )
+  function self:setScale( scaleFactor )
     self.scaleFactor = scaleFactor
   end
 
-  function o:add( cardDesc )
+  function self:add( cardDesc )
     local idx = self.numCards + 1
     local c = Card:new( app_io.getImagePath( cardDesc.spriteSrc ), idx )
     self.cards[idx] = c
     self.numCards = idx
-    c.displayRef:scale( self.scaleFactor, self.scaleFactor )
-    scrollView:insert( c.displayRef )
+    c.ref.anchorY = 0
+    c.ref.x = (scrollView.width/2)
+    c.ref.y = ( (idx-1)*((PrivacyGame.CARD_SIDE*self.scaleFactor)+self.gap) )
+    c.ref:scale( self.scaleFactor, self.scaleFactor )
+    scrollView:insert( c.ref )
   end
 
-  o.displayRef = grp
+  function self:lock()
+    scrollView:setIsLocked( true )
+  end
 
-  return o
+  function self:lock()
+    scrollView:setIsLocked( false )
+  end
+
+  function self:detachCard()
+
+  end
+
+  self.ref = grp
+
+  return self
 end
 
 -- ----------------------------------------------------------------------------
 -- TARGET PANEL - The main play area
 -- ----------------------------------------------------------------------------
 
-function cleanObjects()
-
-  if(imgLose)then
-    imgLose.isVisible = false
+function TargetPanel:clear()
+  if( self.ref ) then
+    self.ref:removeSelf()
+    self.ref = nil
   end
-  if(imgWin)then
-    imgWin.isVisible = false
-  end
-  if(imgWinButton)then
-    imgWinButton.isVisible = false
-  end
-  if(imgLoseButton)then
-    imgLoseButton.isVisible = false
-  end
-
-  DescArea:clear()
-
-  score = intialScore
 end
 
 function TargetPanel:new()
-  local o = {}
 
+  if ( self.ref ) then
+    self:clear()
+  end
+
+  self.targets = {}
+  self.numTargets = 0
   local grp = display.newGroup()
   local contents = display.newGroup()
   local targetArea = app_layout.targetArea
@@ -401,34 +402,37 @@ function TargetPanel:new()
     baseDir = system.DocumentsDirectory
   }
 
-  function o:addTarget( targetDesc )
+  function self:addTarget( targetDesc )
+    local idx = self.numTargets + 1
     local t = TargetBox:new( targetDesc )
-    self.contents:insert( t.displayRef )
+    self.targets[idx] = t
+    self.numTargets = idx
+    self.contents:insert( t.ref )
   end
 
-  function o:addArrow( arrowDesc )
+  function self:addArrow( arrowDesc )
     local a = Arrow:new( arrowDesc )
-    self.contents:insert( a.displayRef )
+    self.contents:insert( a.ref )
   end
 
-  function o:createTextScore(size)
+  function self:createTextScore( size )
       local x =  rect.width/2
       local y =  targetArea.yMin
       txtScore = display.newText( "Points: " ..  score, x, y, "Consolas", size )
       txtScore:setFillColor(1,0.2,0.2, 1)
   end
 
-  function o:createImgWin()
+  function self:createImgWin()
     imgWin = display.newImageRect( "resources/img/correct.png", system.DocumentsDirectory, 160, 160 )
     imgWin.isVisible = false
   end
 
-  function o:createImgLose()
+  function self:createImgLose()
     imgLose = display.newImageRect( "resources/img/incorrect.png", system.DocumentsDirectory, 160, 160 )
     imgLose.isVisible = false
   end
 
-  function o:createWinImgButton( x, y, w, h, img)
+  function self:createWinImgButton( x, y, w, h, img )
      local options = {
       width = w,
       height = h,
@@ -451,7 +455,7 @@ function TargetPanel:new()
     imgWinButton.isVisible = false
   end
 
-  function o:createLoseImgButton( x, y, w, h, img)
+  function self:createLoseImgButton( x, y, w, h, img )
      local options = {
       width = w,
       height = h,
@@ -474,7 +478,7 @@ function TargetPanel:new()
     imgLoseButton.isVisible = false
   end
 
-  function o:fitContentsToPanel()
+  function self:fitContentsToPanel()
     self.contents.x = targetArea.xMin + (rect.width/2)
     self.contents.y = targetArea.yMin + (rect.height/2)
     self.contents.anchorChildren = true
@@ -506,10 +510,11 @@ function TargetPanel:new()
 --]]
   end
 
+  self.contents = contents
   grp:insert( contents )
-  o.displayRef = grp
-  o.contents = contents
-  return o
+  self.ref = grp
+
+  return self
 end
 
 -- ----------------------------------------------------------------------------
@@ -524,25 +529,25 @@ function DescArea:clear()
 end
 
 function DescArea:new( name, desc )
-  local o = {}
-  local descArea = app_layout.descArea
 
   if ( self.ref ) then
     self:clear()
   end
 
-  local group = display.newGroup()
+  local descArea = app_layout.descArea
 
-  local topPart = descArea.height*0.3
+  local grp = display.newGroup()
+
+  local topPart = descArea.titleHeight
   local bottomPart = descArea.height - topPart
 
-  local rect = display.newRect( group, descArea.xMin, descArea.yMin + topPart, descArea.width, descArea.height - topPart )
+  local rect = display.newRect( grp, descArea.xMin, descArea.yMin + topPart, descArea.width, descArea.height - topPart )
   rect.anchorX = 0
   rect.anchorY = 0
   rect:setFillColor( 0, 0, 1, 0.3 )
 
   local titleOpts = {
-    parent = group,
+    parent = grp,
     text = name,
     font = "skranji-bold.ttf",
     fontSize = topPart*(2/3),
@@ -572,7 +577,7 @@ function DescArea:new( name, desc )
   }
   --scrollView.anchorX = 0
   --scrollView.anchorY = 0
-  group:insert( scrollView )
+  grp:insert( scrollView )
 
   local descOpts = {
     --parent = group,
@@ -591,9 +596,27 @@ function DescArea:new( name, desc )
 
   scrollView:insert( descTxt )
 
-  self.ref = group
+  self.ref = grp
 
-  return o
+  return self
+end
+
+function cleanObjects()
+
+  if(imgLose)then
+    imgLose.isVisible = false
+  end
+  if(imgWin)then
+    imgWin.isVisible = false
+  end
+  if(imgWinButton)then
+    imgWinButton.isVisible = false
+  end
+  if(imgLoseButton)then
+    imgLoseButton.isVisible = false
+  end
+
+  score = intialScore
 end
 
 function continueGameEvent(event)

@@ -6,7 +6,7 @@ PrivacyGame = {
   TEXT_SIDE = 128,
   TARGETBOX_SIDE = 132,
   CARDS_OFFSET_Y = 540,
-  CARDS_GAP = 10,
+  CARDS_GAP = 5,
   CARDS_SCALE = 0.75,
   TARGETBOX_BORDER_SIZE = 4,
   TARGETBOX_FILL_COLOUR1 = {0.85, 0.48, 0.15},
@@ -45,6 +45,7 @@ descArea.width = mainArea.width - cardArea.width
 descArea.height = mainArea.height * cardArea.ratio
 descArea.xMax = cardArea.xMin
 descArea.yMax = descArea.yMin + descArea.height
+descArea.titleHeight = descArea.height*0.3
 
 local targetArea = {}
 targetArea.xMin = mainArea.xMin
