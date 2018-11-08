@@ -36,7 +36,12 @@ function createMenu()
 				composer.gotoScene( "play_screen", "fade", 20 ) 
 			end
 			},
-			
+			{
+			title     = 'Editor',
+			action    = function()
+
+			end
+			},
 			{
 			title     = 'Login',
 			action    = function() 
@@ -58,7 +63,7 @@ function createMenu()
 			{
 			title     = 'Contact Us',
 			action    = function()
-			  native.showAlert('Contact Us', 'Email xyz@xyz.com', {'Ok'}) 
+			  native.showAlert('Contact Us', 'Email', {'Ok'}) 
 			end
 			},
 		}
@@ -71,13 +76,17 @@ function createMenu()
 			end
 
 			},
-			
+			{
+			title     = 'Editor',
+			action    = function()
+
+			end
+			},
 			{
 			title     = 'Logout',
 			action    = function()  
-				isAdmin = 0  
+				isAdmin = 0 
 				createMenu()
-				composer.gotoScene( "play_screen", "fade", 20 ) 
 			end
 			},
 			{
@@ -95,7 +104,7 @@ function createMenu()
 			{
 			title     = 'Contact Us',
 			action    = function()
-			  native.showAlert('Contact Us', 'Email xyz@xyz.com', {'Ok'})
+			  native.showAlert('Contact Us', 'Email', {'Ok'})
 			end
 			},
 		}
@@ -108,7 +117,7 @@ function createMenu()
 		height      = 32,
 		--x           = menuArea.xMin + (menuArea.width/2),
 		--y           = menuArea.yMin,
-		baseDir = system.DocumetsDirectory,
+		baseDir = system.DocumentsDirectory,
 		defaultFile = 'resources/img/menu_white.png',
 		overFile    = 'resources/img/menu_white.png',
 		--label = "Menu",
@@ -139,9 +148,6 @@ function createMenu()
 		  padding      = 10,
 		  options      = dropdownOptions
 	} 
-	  
-	
-end
 
 ---[[ Skip through scenarios - for testing only.
 	local fastForwardButton = display.newImageRect( "resources/img/arrow2.png", system.DocumentsDirectory, 24, 24 )
@@ -160,7 +166,7 @@ end
 
 function scene:create( event )
 	local sceneGroup = self.view
- 
+	
 	image = display.newRect(0, 0, 0, 0) 
 	image.x = display.contentCenterX
 	image.y = display.contentCenterY
@@ -199,8 +205,7 @@ function scene:show( event )
 		composer.removeScene( "manage_image_screen" )
 	end
    
-	app_game.buildGame() 	
-     
+	app_game.buildGame() 
 	   
 	
 end
