@@ -66,7 +66,7 @@ local function onRowRender( event )
 
 
 	 
-	local myImage = display.newImageRect( "resources/img/cards/"..filename, 50, 50 )
+	local myImage = display.newImageRect( "resources/img/card/"..filename, 50, 50 )
 	myImage.x = 30; myImage.y = 26
 	row:insert( myImage )
 
