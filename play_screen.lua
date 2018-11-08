@@ -36,12 +36,7 @@ function createMenu()
 				composer.gotoScene( "play_screen", "fade", 20 ) 
 			end
 			},
-			{
-			title     = 'Editor',
-			action    = function()
-
-			end
-			},
+			
 			{
 			title     = 'Login',
 			action    = function() 
@@ -76,12 +71,7 @@ function createMenu()
 			end
 
 			},
-			{
-			title     = 'Editor',
-			action    = function()
-
-			end
-			},
+			
 			{
 			title     = 'Logout',
 			action    = function()  
