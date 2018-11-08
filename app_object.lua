@@ -32,6 +32,8 @@ local txtScore
 -- image win
 local imgWin
 local imgWinButton
+local imgLose
+local imgLoseButton
 
 local sounds = {}
 
@@ -40,6 +42,7 @@ local sounds = {}
 function loadSounds()
   sounds["correct"] = audio.loadSound( "resources/sfx/correct.mp3", system.DocumentsDirectory )
   sounds["incorrect"] = audio.loadSound( "resources/sfx/incorrect.mp3", system.DocumentsDirectory )
+  sounds["sad"] = audio.loadSound( "resources/sfx/sad.mp3", system.DocumentsDirectory )
   sounds["cheer"] = audio.loadSound( "resources/sfx/cheer.mp3", system.DocumentsDirectory )
 end
 
@@ -295,6 +298,14 @@ function Card:touch( event , idx)
         txtScore.text = "Points: " .. score
       -- onFoundCard
         playSound("incorrect")
+		if(score <= 0) then
+          playSound("sad")
+          score = 0
+          txtScore.text = "Score: " .. score
+
+          imgLose.isVisible = true
+          imgLoseButton.isVisible = true
+        end
 
       else
         foundedObjets[idx] = true
@@ -694,6 +705,12 @@ end
 function resetGameEvent(event)
   if(event.phase == "began")then
     app_game.buildGame()
+  end
+end
+
+function resetGameEventCurrent(event)
+  if(event.phase == "began")then
+    app_game.buildGameCurrent()
   end
 end
 
