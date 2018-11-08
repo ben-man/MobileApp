@@ -117,6 +117,7 @@ function createMenu()
 		height      = 32,
 		--x           = menuArea.xMin + (menuArea.width/2),
 		--y           = menuArea.yMin,
+		baseDir = system.DocumentsDirectory,
 		defaultFile = 'resources/img/menu_white.png',
 		overFile    = 'resources/img/menu_white.png',
 		--label = "Menu",
@@ -193,8 +194,6 @@ function scene:show( event )
 		composer.removeScene( "manage_image_screen" )
 	end
    
-	--app_io.printScenario( app_io.getCurrentScenario() )
-    app_io.printScenario( app_io.loadNextScenario() )
 	app_game.buildGame() 
 	   
 	

@@ -13,7 +13,7 @@ local docsDir = system.DocumentsDirectory
 local resourceDir = system.ResourceDirectory
 local dbPath = system.pathForFile( "data.db", docsDir )
 local docsPath = system.pathForFile( nil, docsDir )
-local resourcePath = system.pathForFile( nil, resourceDir )
+--local resourcePath = system.pathForFile( nil, resourceDir )
 local db
 local currentScenario
 
@@ -91,6 +91,23 @@ local function getField( key )
   return settings[key]
 end
 
+--To make Android happy
+local function moveResourceFiles()
+  local manifest = io.open( system.pathForFile( "manifest.txt", resourceDir ), "r" )
+  assert( manifest, "Could not open manifest.txt" )
+
+  for name in manifest:lines() do
+    local filename = name:match("(.+)%..+")
+    print( "manifest file: " .. filename )
+    local srcPath = system.pathForFile( name, resourceDir )
+    local dstPath = system.pathForFile( filename, docsDir )
+
+    copyFile( srcPath, dstPath )
+  end
+
+  io.close( manifest )
+end
+
 local function initDirectories()
 
   assert( lfs.chdir( docsPath ), "chdir failed" )
@@ -102,33 +119,23 @@ local function initDirectories()
     assert( lfs.chdir( path ), "chdir failed" )
   end
 
-  path = path .. "/img"
-  if not ( lfs.chdir( path ) ) then
+  if not ( lfs.chdir( path .. "/img" ) ) then
     --docsPath/resources/img doesn't exist
     assert( lfs.mkdir( "img" ), "Couldn't create 'img' directory in docsPath/resources" )
-    assert( lfs.chdir( path ), "chdir failed" )
   end
 
-  path = path .. "/cards"
-  if not ( lfs.chdir( path ) ) then
+  if not ( lfs.chdir( path .. "/sfx" ) ) then
+    --docsPath/resources/sfx doesn't exist
+    assert( lfs.mkdir( "sfx" ), "Couldn't create 'sfx' directory in docsPath/resources" )
+  end
+
+  if not ( lfs.chdir( path .. "/img/cards" ) ) then
     --docsPath/resources/img/cards doesn't exist
+    assert( lfs.chdir( path .. "/img" ), "Couldn't chdir" )
     assert( lfs.mkdir( "cards" ), "Couldn't create 'cards' directory in docsPath/resources/img" )
   end
 
-  local dstImagesPath = docsPath .. "/resources/img/cards"
-  local srcImagesPath = resourcePath .. "/resources/img/cards"
-
-  local imageList = io.open( resourcePath .. "/images.txt", "r" )
-  assert( imageList, "Could not open images.txt" )
-
-  for filename in imageList:lines() do
-    local srcPath = srcImagesPath .. "/" .. filename
-    local dstPath = dstImagesPath .. "/" .. filename
-
-    copyFile( srcPath, dstPath )
-  end
-
-  io.close( imageList )
+  moveResourceFiles()
 
   return true
 end
@@ -185,35 +192,14 @@ local function loadScenario( id )
   s.targets = json.decode( s.targets )
   s.arrows = json.decode( s.arrows )
 
---[=[
-  s.pictures = {}
-  local count = #s.cards
-  local slots = {}
-
-  for i = 1, count do
-    slots[i] = i
-  end
-
-  local n = count
-  for i = 1, count do
-    local c = s.cards[i]
-    local r = math.random( n )
-    s.pictures[slots[r]] = {
-      path = system.pathForFile( "images/" .. c.picture , docsDir ),
-      cardIndex = i
-    }
-    table.remove( slots, r )
-    n = n - 1
-  end
-]=]
   currentScenario = s
   setField( "scenarioId", s.id )
+  print( "scenario: " .. s.id )
   return s
 end
 
 M.loadScenario = loadScenario
 
- 
 function M.loadImages()
 
   local s = {}
@@ -267,7 +253,6 @@ function M.deleteScenario ( param )
    local res = db:exec( cmd ) 
 
 end
-
 
 local function loadNextScenario()
 
@@ -417,17 +402,10 @@ end
 
 local function initPicturesTable( count )
 
-  local dstImagesPath = docsPath .. "/resources/img/cards"
-  local srcImagesPath = resourcePath .. "/resources/img/cards"
-
-  local imageList = io.open( resourcePath .. "/images.txt", "r" )
+  local imageList = io.open( system.pathForFile( "images.txt", resourceDir ), "r" )
   assert( imageList, "Could not open images.txt" )
 
   for filename in imageList:lines() do
-    local srcPath = srcImagesPath .. "/" .. filename
-    local dstPath = dstImagesPath .. "/" .. filename
-
-    copyFile( srcPath, dstPath )
 
     local cmd = [[
       INSERT INTO pictures(filename, status) VALUES(

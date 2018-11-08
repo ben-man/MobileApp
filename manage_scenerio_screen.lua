@@ -174,7 +174,7 @@ function scene:create( event )
 
 
 	 
-	text1 = display.newText( "Manage Images", 0, 0, font, 18 )
+	text1 = display.newText( "Manage Scenarios", 0, 0, font, 18 )
 	text1:setFillColor( 255 )
 	text1.x, text1.y = display.contentWidth * 0.5, 20
 	sceneGroup:insert( text1 )
