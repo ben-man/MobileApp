@@ -211,6 +211,8 @@ function Card:new( imgPath, idx )
         if ( target:containsPoint( event.x, event.y ) ) then
           if ( target.isComplete ) then
             --This target already has a card attached; do nothing
+            card.ref.x = event.x
+            card.ref.y = event.y
             return true
           end
 
@@ -233,8 +235,7 @@ function Card:new( imgPath, idx )
 
       if ( card.attachedTo ) then
         local target = card.attachedTo
-        print( "target.matchingCard: " .. target.matchingCard )
-        print( "card.name: " .. card.name )
+
         if( target.matchingCard == card.name ) then
           isCorrect = true
           target:complete()

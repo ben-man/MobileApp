@@ -147,7 +147,7 @@ function createMenu()
 		  marginTop    = 12,
 		  padding      = 10,
 		  options      = dropdownOptions
-	} 
+	}
 
 ---[[ Skip through scenarios - for testing only.
 	local fastForwardButton = display.newImageRect( "resources/img/arrow2.png", system.DocumentsDirectory, 24, 24 )
