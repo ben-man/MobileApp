@@ -74,7 +74,7 @@ local function buttonEvent( event )
          time = 20,
          params = { id = row.params.id }
        }
-        
+        app_io.loadScenario( row.params.id )
         composer.gotoScene( "play_screen", options ) 
      
     
@@ -92,7 +92,24 @@ local function buttonEvent( event )
   end
  
 
-    local eventButton = widget.newButton(
+  local eventButton = widget.newButton(
+    {
+      label = 'Play', 
+      shape = "rectangle",
+      x = 300,
+      y = rowHeight * .5,
+      width = 60,
+      height = 25,
+      font = appFont,
+      fontSize = 12,
+      fillColor = { default={ 0.1,0.3,0.6,1 }, over={ 0.1,0.3,0.6,1 } },
+      labelColor = { default={ 1,1,1,1 }, over={ 1,1,1,0.8 } },
+      onRelease = buttonEvent,
+    })
+      row:insert(  eventButton )
+
+
+local eventButton2 = widget.newButton(
   {
     label = 'Delete', 
     shape = "rectangle",
@@ -104,9 +121,9 @@ local function buttonEvent( event )
     fontSize = 12,
     fillColor = { default={ 0.1,0.3,0.6,1 }, over={ 0.1,0.3,0.6,1 } },
     labelColor = { default={ 1,1,1,1 }, over={ 1,1,1,0.8 } },
-    onRelease = buttonEvent,
+    onRelease = buttonEvent2,
   })
-    row:insert(  eventButton )
+    row:insert(  eventButton2 )
 
 end
 
@@ -172,7 +189,7 @@ function scene:create( event )
 
 
 	 
-	text1 = display.newText( "Manage Images", 0, 0, font, 18 )
+	text1 = display.newText( "Manage Scenarios", 0, 0, font, 18 )
 	text1:setFillColor( 255 )
 	text1.x, text1.y = display.contentWidth * 0.5, 20
 	sceneGroup:insert( text1 )
