@@ -151,6 +151,7 @@ function Dropdown.new( o )
         self:hide( time )
     else 
         self:show( time )
+        self:toFront()
     end
   end
   

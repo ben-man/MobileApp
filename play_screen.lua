@@ -177,7 +177,6 @@ function scene:create( event )
 
     createMenu()
 
- 
     sceneGroup:insert( button )
 
 	 

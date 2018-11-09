@@ -677,6 +677,10 @@ function cleanObjects()
     imgLoseButton.isVisible = false
   end
 
+  TargetPanel:clear()
+  CardDeck:clear()
+  DescArea:clear()
+
   score = intialScore
 end
 
