@@ -59,11 +59,13 @@ function playSound(snd)
 end
 
 function hasGameEnded()
-  for i=1,#foundedObjets,1 do
-    if foundedObjets[i] == false then
+  for i = 1, TargetPanel.numTargets do
+    local t = TargetPanel.targets[i]
+    if not ( t.isComplete ) then
       return false
     end
   end
+
   return true
 end
 
@@ -97,16 +99,12 @@ function TargetBox:new( targetDesc )
   }
   local text = display.newText( textOptions )
 
-  --physics.addBody( box, "dynamic", {isSensor=true, radius=25} )
-
   function o:attachCard( card )
-    card.attachedTo = self
     self.ref:insert( card.ref, true )
-    --local newX, newY = card.ref:localToContent( 0, 0 )
-    --card.ref.x = newX
-    --card.ref.y = newY
-    --local ratio = self.ref.contentWidth/card.ref.contentWidth
-    --card.ref:scale( ratio, ratio )
+  end
+
+  function o:complete()
+    self.isComplete = true
   end
 
   function o:containsPoint( x, y )
@@ -161,26 +159,34 @@ function Card:new( imgPath, idx )
   local cardArea = app_layout.cardArea
 
   local image = display.newImageRect( 
-    imgPath, 
+    app_io.getImagePath( imgPath ), 
     system.DocumentsDirectory, 
     PrivacyGame.CARD_SIDE, 
     PrivacyGame.CARD_SIDE
   )
+
+  function o:detach()
+    self.attachedTo = nil
+    local stage = display.getCurrentStage()
+    stage:insert( self.ref, true )
+    self.ref:scale( self.returnTo.scale, self.returnTo.scale )
+  end
 
   -- [[ movement touch ]] --
   function o:touch( event )
     local card = event.target.appObject
     
     if ( event.phase == "began" ) then
-
-      local stage = display.getCurrentStage()
-      CardDeck:lock()
-      stage:insert( card.ref )
-      stage:setFocus( card.ref )
-      card.ref.anchorY = 0.5
       card.returnTo = {}
       card.returnTo.x, card.returnTo.y = card.ref:localToContent( 0, 0 )
       card.returnTo.scale = card.ref.xScale
+      local stage = display.getCurrentStage()
+      CardDeck:lock()
+      stage:insert( card.ref )
+      card.ref.x = card.returnTo.x
+      card.ref.y = card.returnTo.y
+      stage:setFocus( card.ref )
+      card.ref.anchorY = 0.5
       transition.to( card.ref, { x=event.x, y=event.y, time=10} )
       return true
 
@@ -191,10 +197,7 @@ function Card:new( imgPath, idx )
         if ( target:containsPoint( event.x, event.y ) ) then
           return true
         else
-          card.attachedTo = nil
-          local stage = display.getCurrentStage()
-          stage:insert( card.ref, true )
-          card.ref:scale( card.returnTo.scale, card.returnTo.scale )
+          card:detach()
           card.ref.x = event.x
           card.ref.y = event.y
     
@@ -206,7 +209,13 @@ function Card:new( imgPath, idx )
       for i = 1, TargetPanel.numTargets do
         local target = TargetPanel.targets[i]
         if ( target:containsPoint( event.x, event.y ) ) then
+          if ( target.isComplete ) then
+            --This target already has a card attached; do nothing
+            return true
+          end
+
           card.returnTo.size = card.ref.contentWidth
+          card.attachedTo = target
           target:attachCard( card )
           return true
         end
@@ -219,25 +228,49 @@ function Card:new( imgPath, idx )
 
     elseif ( event.phase == "ended" or event.phase == "cancelled" ) then
       
-      if( target.matchingCard == card.name ) then
+      local isCorrect = false
+      local badGuess = false
 
+      if ( card.attachedTo ) then
+        local target = card.attachedTo
+        print( "target.matchingCard: " .. target.matchingCard )
+        print( "card.name: " .. card.name )
+        if( target.matchingCard == card.name ) then
+          isCorrect = true
+          target:complete()
+        else
+          card:detach()
+          card.ref.x = event.x
+          card.ref.y = event.y
+          badGuess = true
+        end
       end
 
       display.getCurrentStage():setFocus( nil )
 
-      if not foundedCard then
-        transition.to( images[idx], { x= CardsLocation[idx].x, y=CardsLocation[idx].y, time=450} )
-        score = score - scorePointsToAdd
-        -- redraw score
-        txtScore.text = "Points: " .. score
-        -- onFoundCard
-        playSound("incorrect")
+      if not ( isCorrect ) then
+        transition.to( 
+          card.ref,
+          {
+            x=card.returnTo.x,
+            y=card.returnTo.y,
+            time=450,
+            onComplete = function( cardRef )
+              CardDeck:reinsertCard( cardRef.appObject )
+            end
+          }
+        )
+
+        if ( badGuess ) then
+          score = score - scorePointsToAdd
+          -- redraw score
+          txtScore.text = "Points: " .. score
+          -- onFoundCard
+          playSound("incorrect")
+        end
 
       else
-        foundedObjets[idx] = true
-        foundedCard = false
-        images[idx].x = foundObj.x
-        images[idx].y = foundObj.y
+        CardDeck:removeCard( card )
         score = score + scorePointsToAdd
         -- redraw score
         txtScore.text = "Points: " .. score
@@ -250,34 +283,12 @@ function Card:new( imgPath, idx )
         end
       end
 
+      CardDeck:unlock()
+      return true
     end
 
   end
 
-    -- [[ colision system ]] --
-  -- when player drops image on rect inside main panel
-  function o:collision( event )
-
-    local card = event.target.appObject
-    local target = event.other.appObject
-
-    if ( target.isComplete ) then
-      --This target already has a card attached; do nothing
-      return true
-    end
-
-    if ( event.phase == "began" ) then
-        card.isAttached = true
-        target:attachCard( card )
-    elseif ( event.phase == "ended" ) then
-        card.isAttached = false
-        target.detachCard()
-    end
-  end 
-
-  --addback:
-  --physics.addBody( image,"dynamic",{isSensor=true,radius=25} )
-  --image:addEventListener( "collision", o )
   image:addEventListener( "touch", o )
 
   o.ref = image
@@ -329,23 +340,41 @@ function CardDeck:new()
     self.scaleFactor = scaleFactor
   end
 
+  function self:reinsertCard( card )
+    card.ref.anchorY = 0
+    scrollView:insert( card.ref )
+    card.ref.x = (scrollView.width/2)
+    card.ref.y = ( (card.idx-1)*((PrivacyGame.CARD_SIDE*self.scaleFactor)+self.gap) )
+  end
+
+  function self:removeCard( card )
+    table.remove( self.cards, card.idx )
+    for i = 1, #self.cards do
+      local c = self.cards[i]
+      c.idx = i
+      c.ref.y = ( (i-1)*((PrivacyGame.CARD_SIDE*self.scaleFactor)+self.gap) )
+    end
+    self.numCards = self.numCards - 1
+    scrollView:setScrollHeight( self.numCards*((PrivacyGame.CARD_SIDE*self.scaleFactor)+self.gap) )
+  end
+
   function self:add( cardDesc )
     local idx = self.numCards + 1
-    local c = Card:new( app_io.getImagePath( cardDesc.spriteSrc ), idx )
+    local c = Card:new( cardDesc.spriteSrc, idx )
     self.cards[idx] = c
     self.numCards = idx
     c.ref.anchorY = 0
-    c.ref.x = (scrollView.width/2)
-    c.ref.y = ( (idx-1)*((PrivacyGame.CARD_SIDE*self.scaleFactor)+self.gap) )
     c.ref:scale( self.scaleFactor, self.scaleFactor )
     scrollView:insert( c.ref )
+    c.ref.x = (scrollView.width/2)
+    c.ref.y = ( (idx-1)*((PrivacyGame.CARD_SIDE*self.scaleFactor)+self.gap) )
   end
 
   function self:lock()
     scrollView:setIsLocked( true )
   end
 
-  function self:lock()
+  function self:unlock()
     scrollView:setIsLocked( false )
   end
 
@@ -416,10 +445,33 @@ function TargetPanel:new()
   end
 
   function self:createTextScore( size )
-      local x =  rect.width/2
+--[[
+      local x =  (targetArea.width - targetArea.offset)/2
       local y =  targetArea.yMin
       txtScore = display.newText( "Points: " ..  score, x, y, "Consolas", size )
       txtScore:setFillColor(1,0.2,0.2, 1)
+]]
+      local descArea = app_layout.descArea
+      local cardArea = app_layout.cardArea
+      local scoreOpts = {
+        parent = grp,
+        text = "Points: " ..  score,
+        font = "skranji-bold.ttf",
+        fontSize = descArea.titleHeight*(2/3),
+        x = descArea.xMax + (cardArea.width/2),
+        y = descArea.yMin,
+        --width = descArea.width,
+        --height = topPart,
+        align = "left"
+      }
+      txtScore = display.newText( scoreOpts )
+      txtScore.anchorY = 0
+      txtScore:setFillColor( 1, 0.2, 0.2 )
+    
+      if ( txtScore.contentWidth > cardArea.width ) then
+        local scale = cardArea.width/txtScore.contentWidth
+        txtScore:scale( scale, scale )
+      end
   end
 
   function self:createImgWin()
@@ -450,8 +502,8 @@ function TargetPanel:new()
         onEvent = function(e) continueGameEvent(e) end
     })
     imgWinButton:scale(0.5,0.4)
-    imgWinButton.x = txtScore.x
-    imgWinButton.y = txtScore.y + 22
+    imgWinButton.x = (app_layout.targetArea.width - app_layout.targetArea.offset)/2
+    imgWinButton.y = app_layout.targetArea.yMin + 22
     imgWinButton.isVisible = false
   end
 
@@ -473,8 +525,8 @@ function TargetPanel:new()
         onEvent = function(e) resetGameEvent(e) end
     })
     imgLoseButton:scale(0.5,0.4)
-    imgLoseButton.x = txtScore.x
-    imgLoseButton.y = txtScore.y + 22
+    imgLoseButton.x = (app_layout.targetArea.width - app_layout.targetArea.offset)/2
+    imgLoseButton.y = app_layout.targetArea.yMin + 22
     imgLoseButton.isVisible = false
   end
 
